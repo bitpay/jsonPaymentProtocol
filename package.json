@@ -1,0 +1,26 @@
+{
+  "name": "json-payment-protocol",
+  "version": "0.1.0",
+  "description": "Simple interface for retrieving JSON payment requests and submitting payments",
+  "main": "index.js",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "request": "^2.83.0"
+  },
+  "devDependencies": {
+    "async": "^2.6.0",
+    "promptly": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "BitPay",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitpay/jsonPaymentProtocol.git"
+  },
+  "license": "MIT"
+}
