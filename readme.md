@@ -21,7 +21,7 @@ paymentProtocol.getRawPaymentRequest(requestUrl, function (err, response) {
   if (err) {
     return console.log('Error retrieving payment request', err);
   }
-  paymentProtocol.parsePaymentRequest(response.body, response.headers, function (err, paymentRequest) {
+  paymentProtocol.parsePaymentRequest(response.rawBody, response.headers, function (err, paymentRequest) {
     if (err) {
       return console.log('Error parsing payment request', err);
     }
