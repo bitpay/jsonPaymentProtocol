@@ -16,7 +16,7 @@ Revision 0.5
 10. (Server) Broadcasts payment to network and notifies client payment was accepted.
 11. (Client) If payment is accepted by server, wallet broadcasts payment
 
-If at any time the payment is rejected by the server **your client should not broadcast the payment**.
+In general, the payment should not be broadcast by the client. If at any time the payment is rejected by the server **your client must not broadcast the payment**.
 Broadcasting a payment before getting a success notification back from the server will in most cases lead to a failed payment for the sender. The sender will bear the cost of paying transaction fees yet again to get their money back.
 
 ## Payment Request
@@ -35,7 +35,7 @@ On a successful request, the response will contain one header of note.
 #### Body
 * `network` - Which network is this request for (main / test / regtest)
 * `currency` - Three digit currency code representing which coin the request is based on
-* `requiredFeePerByte` - The minimum fee per byte required on this transaction, if lower than that we will reject it
+* `requiredFeePerByte` - The exact fee per byte required on this transaction. Payment will be rejected if fee rate included for the transaction is not equal to this value. _May be fractional value_ ie 0.123 sat/byte
 * `outputs` - What output(s) your transaction must include in order to be accepted
 * `time` - ISO Date format of when the invoice was generated
 * `expires` - ISO Date format of when the invoice will expire
@@ -104,7 +104,7 @@ The response will be a JSON format payload containing the original payment body 
 
 ### Curl Example
 ```
-curl -v -H 'Content-Type: application/payment' -d '{"currency": "BTC", "transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]}' https://test.bitpay.com/i/7QBCJ2TpazTKKnczzJQJMc 
+curl -v -H 'Content-Type: application/payment' -d '{"currency": "BTC", "transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]}' https://test.bitpay.com/i/7QBCJ2TpazTKKnczzJQJMc
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
 * Connected to test.bitpay.com (127.0.0.1) port 8088 (#0)
@@ -115,13 +115,13 @@ curl -v -H 'Content-Type: application/payment' -d '{"currency": "BTC", "transact
 > Accept: */*
 > Content-Type: application/payment-ack
 > Content-Length: 403
-> 
+>
 * upload completely sent off: 403 out of 403 bytes
 < HTTP/1.1 200 OK
 < Content-Length: 520
 < Date: Fri, 12 Jan 2018 22:44:13 GMT
 < Connection: keep-alive
-< 
+<
 * Connection #0 to host test.bitpay.com left intact
 {"payment":{"transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]},"memo":"Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."}%
 ```
@@ -143,7 +143,7 @@ curl -v https://test.bitpay.com/i/48gZau8ao76bqAoEwAKSwx -H 'Accept: application
 > Host: test.bitpay.com
 > User-Agent: curl/7.54.0
 > Accept: application/payment-request
-> 
+>
 < HTTP/1.1 400 Bad Request
 < Date: Fri, 26 Jan 2018 01:54:03 GMT
 < Content-Type: text/html; charset=utf-8
@@ -155,7 +155,7 @@ curl -v https://test.bitpay.com/i/48gZau8ao76bqAoEwAKSwx -H 'Accept: application
 < Access-Control-Allow-Origin: *
 < Access-Control-Allow-Methods: GET, POST, OPTIONS
 < Access-Control-Allow-Headers: Host, Connection, Content-Length, Accept, Origin, User-Agent, Content-Type, Accept-Encoding, Accept-Language
-< 
+<
 * Connection #0 to host test.bitpay.com left intact
 This invoice is no longer accepting payments
 ```
