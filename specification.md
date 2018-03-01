@@ -35,7 +35,7 @@ On a successful request, the response will contain one header of note.
 #### Body
 * `network` - Which network is this request for (main / test / regtest)
 * `currency` - Three digit currency code representing which coin the request is based on
-* `requiredFeePerByte` - The exact fee per byte required on this transaction. Payment will be rejected if fee rate included for the transaction is not equal to this value. _May be fractional value_ ie 0.123 sat/byte
+* `requiredFeeRate` - The minimum fee per byte required on this transaction. Payment will be rejected if fee rate included for the transaction is not at least this value. _May be fractional value_ ie 0.123 sat/byte
 * `outputs` - What output(s) your transaction must include in order to be accepted
 * `time` - ISO Date format of when the invoice was generated
 * `expires` - ISO Date format of when the invoice will expire
