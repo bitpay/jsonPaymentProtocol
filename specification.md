@@ -136,7 +136,7 @@ Many wallet developers have voiced complaints about needing to use x509 PKI in o
 For those unaware, this is the exact same method all bitcoin transactions are authenticated. This should make it much easier for wallets to implement since they already have code to do this. We will distribute public keys which can be used to verify the signatures.
 How you choose to store the keys for verifying providers is up to you as a wallet developer, but we do make some recommendations below.
 
-Since there will potentially be multiple providers using this system each with multiple keys, the payment request will include an `x-identity` header will contain some unique identifier to indicate which public key was used to sign the payload. In the case of ECSDA signatures we
+Since there will potentially be multiple providers using this system each with multiple keys, the payment request will include an `x-identity` header will contain a unique identifier to indicate which public key was used to sign the payload. In the case of ECSDA signatures we
 will provide the RIPEMD160+SHA256 hash of the public key in this header (same format as a bitcoin address). We have chosen not to send the public key itself here as that would lead to the possibility of wallet developers naively trusting whatever public key was sent via the header
 and verifying against that. By only sending a hash of the public key the wallet developer is required to follow best practices of retrieving the public keys from a trusted source.
 
