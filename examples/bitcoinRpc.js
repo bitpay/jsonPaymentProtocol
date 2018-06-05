@@ -14,6 +14,22 @@ let config = {
     password: 'fakePassword',
     ipAddress: '127.0.0.1',
     port: '18332'
+  },
+  trustedKeys: {
+    // The idea is that you or the wallet provider will populate this with keys that are trusted, we have provided a few possible approaches
+    // in the specification.md document within the 'key-storing suggestions' section
+
+    // Each key here is the pubkey hash so that we can do quick look-ups using the x-identity header sent in the payment request
+    'mh65MN7drqmwpCRZcEeBEE9ceQCQ95HtZc': {
+      // This is displayed to the user, somewhat like the organization field on an SSL certificate
+      owner: 'BitPay (TESTNET ONLY - DO NOT TRUST FOR ACTUAL BITCOIN)',
+      // Which bitcoin networks is this key valid for (regtest, test, main)
+      networks: ['test'],
+      // Which domains this key is valid for
+      domains: ['test.bitpay.com'],
+      // The actual public key which should be used to validate the signatures
+      publicKey: '03159069584176096f1c89763488b94dbc8d5e1fa7bf91f50b42f4befe4e45295a',
+    }
   }
 };
 
@@ -27,6 +43,7 @@ if (config.rpcServer.username === 'fakeUser') {
  * payments via bitcoinRPC. We do not recommend copying this code verbatim in any product designed for actual users.
  */
 
+let requestUrl;
 let paymentUrl;
 let requiredFee = 0;
 let outputObject = {};
@@ -50,11 +67,17 @@ async.waterfall([
         console.log('Error parsing payment request', err);
         return cb(err);
       }
+      requestUrl = rawResponse.requestUrl;
       return cb(null, paymentRequest);
     });
   },
-  function checkAndDisplayPaymentRequestToUser(paymentRequest, cb) {
-    requiredFee = (paymentRequest.requiredFeePerByte * 1024) / 1e8;
+  function verifyRequestSignature(paymentRequest, cb) {
+    paymentProtocol.verifyPaymentRequest(requestUrl, paymentRequest, config.trustedKeys, function (err, keyOwner) {
+      cb(err, paymentRequest, keyOwner);
+    });
+  },
+  function checkAndDisplayPaymentRequestToUser(paymentRequest, keyOwner, cb) {
+    requiredFee = (paymentRequest.requiredFeeRate * 1000) / 1e8;
 
     //Make sure request is for the currency we support
     if (paymentRequest.currency.toLowerCase() !== config.currency.toLowerCase()) {
@@ -69,7 +92,7 @@ async.waterfall([
       return cb(new Error('Payment request network did not match our own'));
     }
 
-    console.log('Server is requesting payments for:');
+    console.log('Server is requesting payment(s) for:');
     console.log('---');
 
     paymentRequest.outputs.forEach(function (output) {
@@ -82,7 +105,15 @@ async.waterfall([
 
     paymentUrl = paymentRequest.paymentUrl;
 
-    cb();
+    console.log('Request signed by:', keyOwner);
+
+    promptly.confirm('Create transaction for this payment request? (y/n)', function (err, accept) {
+      if (!accept) {
+        console.log('Payment cancelled');
+        return cb(new Error('Payment Cancelled'));
+      }
+      return cb();
+    });
   },
   function createRawTransaction(cb) {
     let createCommand = {
@@ -213,7 +244,11 @@ async.waterfall([
       cb();
     });
   }
-]);
+], function (err) {
+  if (err) {
+    console.log('Error', err);
+  }
+});
 
 function execRpcCommand(command, callback) {
   request
@@ -229,6 +264,9 @@ function execRpcCommand(command, callback) {
     }, function (err, response, body) {
       if (err) {
         return callback(err);
+      }
+      if (!body) {
+        return callback(new Error('No body returned by bitcoin RPC server'));
       }
       if (body.error) {
         return callback(body.error);
