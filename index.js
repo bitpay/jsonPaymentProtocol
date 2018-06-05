@@ -8,6 +8,7 @@ const util = require('util');
 //Modules
 const _ = require('lodash');
 const request = require('request');
+const secp256k1 = require('secp256k1');
 
 function PaymentProtocol(options) {
   this.options = _.merge({
@@ -24,7 +25,7 @@ PaymentProtocol.prototype.getRawPaymentRequest = function getRawPaymentRequest(p
   let paymentUrlObject = url.parse(paymentUrl);
 
   //Detect 'bitcoin:' urls and extract payment-protocol section
-  if (paymentUrlObject.protocol !== 'http' && paymentUrlObject.protocol !== 'https') {
+  if (paymentUrlObject.protocol !== 'http:' && paymentUrlObject.protocol !== 'https:') {
     let uriQuery = query.decode(paymentUrlObject.query);
     if (!uriQuery.r) {
       return callback(new Error('Invalid payment protocol url'));
@@ -49,7 +50,7 @@ PaymentProtocol.prototype.getRawPaymentRequest = function getRawPaymentRequest(p
       return callback(new Error(response.body.toString()));
     }
 
-    return callback(null, {rawBody: response.body, headers: response.headers});
+    return callback(null, {rawBody: response.body, headers: response.headers, requestUrl: paymentUrl});
   });
 };
 
@@ -93,6 +94,9 @@ PaymentProtocol.prototype.parsePaymentRequest = function parsePaymentRequest(raw
     return callback(new Error(`Response body hash does not match digest header. Actual: ${hash} Expected: ${digest}`));
   }
 
+  paymentRequest.hash = hash;
+  paymentRequest.headers = headers;
+
   return callback(null, paymentRequest);
 };
 
@@ -102,6 +106,91 @@ PaymentProtocol.prototype.parsePaymentRequest = function parsePaymentRequest(raw
  * @param headers {object} Headers sent by the payment protocol server
  */
 PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProtocol.prototype.parsePaymentRequest);
+
+/**
+ * Verifies the signature of a given payment request is both valid and from a trusted key
+ * @param requestUrl {String} The url used to fetch this payment request
+ * @param paymentRequest {Object} The payment request object returned by parsePaymentRequest
+ * @param trustedKeys {Object} An object containing all keys trusted by this client
+ * @param callback {function} If no error is returned callback will contain the owner of the key which signed this request (ie BitPay Inc.)
+ */
+PaymentProtocol.prototype.verifyPaymentRequest = function verifyPaymentRequest(requestUrl, paymentRequest, trustedKeys, callback) {
+  let hash = paymentRequest.headers.digest.split('=')[1];
+  let signature = paymentRequest.headers.signature;
+  let signatureType = paymentRequest.headers['x-signature-type'];
+  let identity = paymentRequest.headers['x-identity'];
+  let host;
+
+  if (!requestUrl) {
+    return callback(new Error('You must provide the original payment request url'));
+  }
+  if (!trustedKeys) {
+    return callback(new Error('You must provide a set of trusted keys'))
+  }
+
+  try {
+    host = url.parse(requestUrl).hostname;
+  }
+  catch(e) {}
+
+  if (!host) {
+    return callback(new Error('Invalid requestUrl'));
+  }
+  if (!signatureType) {
+    return callback(new Error('Response missing x-signature-type header'));
+  }
+  if (typeof signatureType !== 'string') {
+    return callback(new Error('Invalid x-signature-type header'));
+  }
+  if (signatureType !== 'ecc') {
+    return callback(new Error(`Unknown signature type ${signatureType}`))
+  }
+  if (!signature) {
+    return callback(new Error('Response missing signature header'));
+  }
+  if (typeof signature !== 'string') {
+    return callback(new Error('Invalid signature header'));
+  }
+  if (!identity) {
+    return callback(new Error('Response missing x-identity header'));
+  }
+  if (typeof identity !== 'string') {
+    return callback(new Error('Invalid identity header'));
+  }
+
+  if (!trustedKeys[identity]) {
+    return callback(new Error(`Response signed by unknown key (${identity}), unable to validate`));
+  }
+
+  let keyData = trustedKeys[identity];
+  if (keyData.domains.indexOf(host) === -1) {
+    return callback(new Error(`The key on the response (${identity}) is not trusted for domain ${host}`));
+  } else if (!keyData.networks.includes(paymentRequest.network)) {
+    return callback(new Error(`The key on the response is not trusted for transactions on the '${paymentRequest.network}' network`));
+  }
+
+  let valid = secp256k1.verify(
+    Buffer.from(hash, 'hex'),
+    Buffer.from(signature, 'hex'),
+    Buffer.from(keyData.publicKey, 'hex')
+  );
+
+  if (!valid) {
+    return callback(new Error('Response signature invalid'));
+  }
+
+  return callback(null, keyData.owner);
+};
+
+/**
+ * Verifies the signature of a given payment request is both valid and from a trusted key
+ * @param requestUrl {String} The url used to fetch this payment request
+ * @param paymentRequest {Object} The payment request object returned by parsePaymentRequest
+ * @param trustedKeys {Object} An object containing all keys trusted by this client
+ * @returns {String} The owner of the key which signed this request (ie BitPay Inc.) which should be displayed to the user
+ */
+PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProtocol.prototype.parsePaymentRequest);
+
 
 /**
  * Sends a given payment to the server for validation

@@ -11,7 +11,7 @@ This is the first version of the JSON payment protocol interface. If you have qu
 We support both callbacks and promises. For promises just add Async to the end of the function name. Be careful to follow the notes about when to broadcast your payment. **Broadcasting a payment before getting a success notification back from the server in most cases will lead to a failed payment for the sender.** The sender will bear the cost of paying transaction fees yet again to get their money back.
 
 #### Callbacks
-```
+```js
 const JsonPaymentProtocol = require('json-payment-protocol');
 const paymentProtocol = new JsonPaymentProtocol();
 
@@ -46,7 +46,7 @@ paymentProtocol.getRawPaymentRequest(requestUrl, function (err, response) {
 ```
 
 #### Promises
-```
+```js
 const JsonPaymentProtocol = require('json-payment-protocol');
 const paymentProtocol = new JsonPaymentProtocol();
 
@@ -80,7 +80,7 @@ paymentProtocol
 
 Options passed to `new JsonPaymentProtocol()` are passed to request, so if you need to use a proxy or set any other request.js flags you can do so by including them when instantiating your instance. For example:
 
-```
+```js
 new JsonPaymentProtocol({
   proxy: 'socks://mySocksProxy.local'
 })
