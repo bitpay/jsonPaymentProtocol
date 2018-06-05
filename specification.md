@@ -29,7 +29,7 @@ A GET request should be made to the payment protocol url.
 The response will be a JSON format payload quite similar to the BIP70 format.
 
 #### Headers
-On a successful request, the response will contain a few headers of note.
+On a successful request, the response will contain the following headers.
 
 * `digest` - A SHA256 hash of the JSON response string, should be verified by the client before proceeding
 * `x-identity` - An identifier to represent which public key should be used to verify the signature. For example for BitPay's ECC keys we will include the public key hash in this header. Implementations should **NOT** include the public key here directly.

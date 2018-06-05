@@ -170,9 +170,9 @@ PaymentProtocol.prototype.verifyPaymentRequest = function verifyPaymentRequest(r
   }
 
   let valid = secp256k1.verify(
-    new Buffer(hash, 'hex'),
-    new Buffer(signature, 'hex'),
-    new Buffer(keyData.publicKey, 'hex')
+    Buffer.from(hash, 'hex'),
+    Buffer.from(signature, 'hex'),
+    Buffer.from(keyData.publicKey, 'hex')
   );
 
   if (!valid) {
