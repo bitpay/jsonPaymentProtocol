@@ -5,7 +5,8 @@
   "main": "index.js",
   "dependencies": {
     "lodash": "^4.17.4",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "secp256k1": "^3.5.0"
   },
   "devDependencies": {
     "async": "^2.6.0",
