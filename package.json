@@ -10,7 +10,10 @@
   },
   "devDependencies": {
     "async": "^2.6.0",
-    "promptly": "^2.2.0"
+    "bs58": "^4.0.1",
+    "kbpgp": "^2.0.77",
+    "promptly": "^2.2.0",
+    "request-promise": "^4.2.2"
   },
   "engines": {
     "node": ">=8.0.0"
