@@ -190,8 +190,8 @@ This route will server a JSON payload which conforms to the format:
   "signatures": [
     {
       "created": "ISO Date when this signature was created",
-      "identifier": "GPG fingerprint",
-      "signature": "hexadecimal encoded detached GPG signature of key payload"
+      "identifier": "PGP fingerprint",
+      "signature": "hexadecimal encoded detached PGP signature of key payload"
     }
   ]
 }
