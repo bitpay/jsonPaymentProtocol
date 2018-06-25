@@ -142,7 +142,7 @@ and verifying against that. By only sending a hash of the public key the wallet 
 
 ### Key Distribution
 The JSON payment protocol provider will make keys available via the route:
-* <paymentRequestDomain>/signingKeys/paymentProtocol.json
+* [paymentRequestDomain]/signingKeys/paymentProtocol.json
 
 This route will serve a JSON payload which conforms to the format:
 
@@ -177,7 +177,7 @@ An example of this fully completed:
 
 ### Key Signature Distribution
 The JSON payment protocol provider will distribute PGP signatures of the distributed keys available via:
-* <paymentRequestDomain>/signatures/<sha256HashOfKeyPayload>.json
+* [paymentRequestDomain]/signatures/[sha256HashOfKeyPayload].json
 
 The SHA256 should be performed on the raw body of the keys sent down by the server.
 
