@@ -104,7 +104,6 @@ Promise.all(keyRequests).then(() => {
         if (err) {
           return reject(err);
         }
-        // console.log(km.pgp.key(km.pgp.primary).get_fingerprint().toString('hex'));
         importedPgpKeys[km.pgp.key(km.pgp.primary).get_fingerprint().toString('hex')] = km;
         return resolve();
       });
@@ -170,7 +169,8 @@ Promise.all(keyRequests).then(() => {
     console.log('----\nValid keymap for use in bitcoinRpc example:');
 
     parsedEccPayload.publicKeys.forEach((pubkey) => {
-      // Here we are just generating the pubkey hash (btc address) of the
+      // Here we are just generating the pubkey hash (btc address) of each of the public keys received for easy lookup later
+      // as this is what will be provided by the x-identity header
       let a = crypto.createHash('sha256').update(pubkey, 'hex').digest();
       let b = crypto.createHash('rmd160').update(a).digest('hex');
       let c = '00' + b; // This is assuming livenet
