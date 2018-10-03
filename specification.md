@@ -40,6 +40,7 @@ On a successful request, the response will contain the following headers.
 * `network` - Which network is this request for (main / test / regtest)
 * `currency` - Three digit currency code representing which coin the request is based on
 * `requiredFeeRate` - The minimum fee per byte required on this transaction. Payment will be rejected if fee rate included for the transaction is not at least this value. _May be fractional value_ ie 0.123 sat/byte
+* `requiredInputConfirmations` - The minimum number of confirmations on the blockchain for each transaction input. Can be 0 which means that the input is unconfirmed but needs to be broadcasted and found in the servers mempool.
 * `outputs` - What output(s) your transaction must include in order to be accepted
 * `time` - ISO Date format of when the invoice was generated
 * `expires` - ISO Date format of when the invoice will expire
@@ -317,7 +318,7 @@ This invoice is no longer accepting payments
 | 400 | Transaction fee (X sat/kb) is below the current minimum threshold (Y sat/kb) | Your fee must be at least the amount sent in the payment request as `requiredFeePerByte`|
 | 400 | This invoice is priced in BTC, not BCH. Please try with a BTC wallet instead | Your transaction currency did not match the one on the invoice |
 | 422 | One or more input transactions for your transaction were not found in the mempool. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet been broadcast to the network |
-| 422 | One or more input transactions for your transactions are not yet confirmed in at least one block. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet confirmed in at least one block on the network |
+| 422 | One or more input transactions for your transactions are not yet confirmed in at least the required number of blocks. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet confirmed in at least `requiredInputConfirmations` blocks on the blockchain |
 | 500 | Error broadcasting payment to network | Our Bitcoin node returned an error when attempting to broadcast your transaction to the network. This could mean our node is experiencing an outage or your transaction is a double spend. |
 
 Another issue you may see is that you are being redirected to `bitpay.com/invoice?id=xxx` instead of being sent a payment-request. In that case you are not setting your `Accept` header to a valid value and we assume you are a browser or other unknown requester.
