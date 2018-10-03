@@ -1,6 +1,6 @@
 # JSON Payment Protocol Specification
 
-Revision 0.6
+Revision 0.7
 
 ## Application Logic
 
