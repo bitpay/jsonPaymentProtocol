@@ -316,7 +316,7 @@ This invoice is no longer accepting payments
 | 400 | The amount on the transaction (X BTC) does not match the amount requested (Y BTC). This payment will not be accepted. | Payout amount to address does not match amount that was requested |
 | 400 | Transaction fee (X sat/kb) is below the current minimum threshold (Y sat/kb) | Your fee must be at least the amount sent in the payment request as `requiredFeePerByte`|
 | 400 | This invoice is priced in BTC, not BCH. Please try with a BTC wallet instead | Your transaction currency did not match the one on the invoice |
-| 422 | One or more input transactions for your transaction were not found on the blockchain. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet been broadcast to the network |
+| 422 | One or more input transactions for your transaction were not found in the mempool. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet been broadcast to the network |
 | 422 | One or more input transactions for your transactions are not yet confirmed in at least one block. Make sure you're not trying to use unconfirmed change | Spending outputs which have not yet confirmed in at least one block on the network |
 | 500 | Error broadcasting payment to network | Our Bitcoin node returned an error when attempting to broadcast your transaction to the network. This could mean our node is experiencing an outage or your transaction is a double spend. |
 
