@@ -2,13 +2,15 @@
 
 To make it easier for wallet and exchange developers to implement the security and user experience improvements that come with Payment Protocol (Bitcoin Improvement Proposal 70, or BIP70), we've created our own Payment Protocol interface using JSON.
 
-Our interface and implementation spec deviates slightly from the BIP-70 implementation of Payment Protocol. The JSON interface provides for direct communication between a wallet and BitPay's (or a merchant's) servers. If a wallet submits an incorrect payment to BitPay or a merchant, the receiving server will reject the transaction. This prevents any transactions which will result in a failed payment from reaching the blockchain and costing users unnecessary miner fees.
+This spec includes some enhancements to the original BIP70 spec:
 
-By enabling wallets to verify payment requests signed with ECDSA signatures, the JSON Payment Protocol interface also provides an alternative to supporting and verifying a PKI/X.509 SSL certificate authority (CA) chain.
+* The JSON interface provides for direct communication between a wallet and BitPay's (or a merchant's) servers. If a wallet submits an incorrect payment to BitPay or a merchant, the receiving server will reject the transaction. This prevents any transactions which will result in a failed payment from reaching the blockchain and costing users unnecessary miner fees.
 
-This interface is currency-agnostic, so it will work seamlessly with other currencies accepted on BitPay invoices (or by other merchants using this Payment Protocol spec) in the future.
+* By enabling wallets to verify payment requests signed with ECDSA signatures, the JSON Payment Protocol interface also provides an alternative to supporting and verifying a PKI/X.509 SSL certificate authority (CA) chain.
 
-If you have questions about the specification itself, [view the documentation](specification.md).
+* This interface is currency-agnostic, so it will work seamlessly with other currencies accepted on BitPay invoices (or by other merchants using this Payment Protocol spec) in the future.
+
+This is the first version of the JSON Payment Protocol interface. If you have questions about the specification itself, [view the documentation](specification.md).
 
 ### Getting Started
 
