@@ -181,9 +181,42 @@ async.waterfall([
         console.log('Bitcoind did not return a signed transaction');
         return cb(new Error('Missing signed tx'));
       }
-      cb(null, signedTransaction.hex);
+      cb(null, fundedRawTransaction, signedTransaction.hex);
     });
   },
+  function getSignedTransactionSize(fundedRawTransaction, signedRawTransaction, cb) {
+    let command = {
+      jsonrpc: '1.0',
+      method: 'decoderawtransaction',
+      params: [signedRawTransaction]
+    };
+
+    execRpcCommand(command, function (err, decodedTransaction) {
+      if (err) {
+        console.log('Error signing transaction:', err);
+        return cb(err);
+      }
+      if (!decodedTransaction) {
+        console.log('Bitcoind did not decode the transaction');
+        return cb(new Error('Missing decoded tx'));
+      }
+      cb(null, fundedRawTransaction, signedRawTransaction, decodedTransaction.vsize);
+    });
+  },
+  function checkIfTransactionWillBeAccepted(fundedRawTransaction, signedRawTransaction, weightedSize, cb) {
+    console.log('Sending unsigned transaction to server for verification...');
+
+    paymentProtocol.sendPaymentForVerification(config.currency, fundedRawTransaction, weightedSize, paymentUrl, (err) => {
+      if (err) {
+        console.log('Error verifying payment with server', err);
+        return cb(err);
+      } else {
+        console.log('Payment verified by server');
+        return cb(null, signedRawTransaction);
+      }
+    });
+  },
+  //Note we only broadcast AFTER a SUCCESS response from the server verification request
   function displayTransactionToUserForApproval(signedRawTransaction, cb) {
     let command = {
       jsonrpc: '1.0',
@@ -212,37 +245,40 @@ async.waterfall([
       });
     });
   },
-  function sendTransactionToServer(signedRawTransaction, cb) {
-    paymentProtocol.sendPayment(config.currency, signedRawTransaction, paymentUrl, function (err, response) {
-      if (err) {
-        console.log('Error sending payment to server', err);
-        return cb(err);
-      }
-      else {
-        console.log('Payment accepted by server');
-        return cb(null, signedRawTransaction);
-      }
-    });
-  },
-  //Note we only broadcast AFTER a SUCCESS response from the server
   function broadcastPayment(signedRawTransaction, cb) {
-    let command = {
-      jsonrpc: '1.0',
-      method: 'sendrawtransaction',
-      params: [signedRawTransaction]
-    };
+    async.parallel([
+      function sendToServer(cb) {
+        paymentProtocol.broadcastPayment(config.currency, signedRawTransaction, paymentUrl, function(err) {
+          if (err) {
+            console.log('Error sending payment to server', err);
+            return cb(err);
+          }
+          else {
+            console.log('Payment accepted by server');
+            return cb(null, signedRawTransaction);
+          }
+        });
+      },
+      function broadcastP2P(cb) {
+        let command = {
+          jsonrpc: '1.0',
+          method: 'sendrawtransaction',
+          params: [signedRawTransaction]
+        };
 
-    execRpcCommand(command, function (err, signedTransaction) {
-      if (err) {
-        console.log('Error broadcasting transaction:', err);
-        return cb(err);
+        execRpcCommand(command, function (err, signedTransaction) {
+          if (err) {
+            console.log('Error broadcasting transaction:', err);
+            return cb(err);
+          }
+          if (!signedTransaction) {
+            console.log('Bitcoind failed to broadcast transaction');
+            return cb(new Error('Failed to broadcast tx'));
+          }
+          cb();
+        });
       }
-      if (!signedTransaction) {
-        console.log('Bitcoind failed to broadcast transaction');
-        return cb(new Error('Failed to broadcast tx'));
-      }
-      cb();
-    });
+    ], cb);
   }
 ], function (err) {
   if (err) {

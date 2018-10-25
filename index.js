@@ -195,11 +195,73 @@ PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProto
 /**
  * Sends a given payment to the server for validation
  * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
+ * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
+ * @param weightedSize {number} Weighted size of the transaction
+ * @param url {string} the payment protocol specific url (https)
+ * @param callback {function} (err, response)
+ */
+PaymentProtocol.prototype.sendPaymentForVerification = function sendPayment(currency, unsignedRawTransaction, weightedSize, url, callback) {
+  let paymentResponse;
+
+  //Basic sanity checks
+  if (typeof unsignedRawTransaction !== 'string') {
+    return callback(new Error('unsignedRawTransaction must be a string'));
+  }
+  if (!/^[0-9a-f]+$/i.test(unsignedRawTransaction)) {
+    return callback(new Error('unsignedRawTransaction must be in hexadecimal format'));
+  }
+  if (typeof weightedSize !== 'number' || parseInt(weightedSize) !== weightedSize) {
+    return callback(new Error('weightedSize must be an integer'));
+  }
+
+  let requestOptions = _.merge(this.options, {
+    url: url,
+    headers: {
+      'Content-Type': 'application/verify-payment'
+    },
+    body: JSON.stringify({
+      currency: currency,
+      transactions: [unsignedRawTransaction],
+      weightedSize: weightedSize
+    })
+  });
+
+  request.post(requestOptions, (err, response) => {
+    if (err) {
+      return callback(err);
+    }
+    if (response.statusCode !== 200) {
+      return callback(new Error(response.body.toString()));
+    }
+
+    try {
+      paymentResponse = JSON.parse(response.body);
+    }
+    catch (e) {
+      return callback(new Error('Unable to parse response from server'));
+    }
+
+    callback(null, paymentResponse);
+  });
+};
+
+/**
+ * Sends a given payment to the server for validation
+ * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
+ * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
+ * @param weightedSize {number} Weighted size of the transaction
+ * @param url {string} the payment protocol specific url (https)
+ */
+PaymentProtocol.prototype.sendPaymentForVerificationAsync = util.promisify(PaymentProtocol.prototype.sendPaymentForVerification);
+
+/**
+ * Sends actual payment to server
+ * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
  * @param signedRawTransaction {string} Hexadecimal format raw signed transaction
  * @param url {string} the payment protocol specific url (https)
  * @param callback {function} (err, response)
  */
-PaymentProtocol.prototype.sendPayment = function sendPayment(currency, signedRawTransaction, url, callback) {
+PaymentProtocol.prototype.broadcastPayment = function broadcastPayment(currency, signedRawTransaction, url, callback) {
   let paymentResponse;
 
   //Basic sanity checks
@@ -246,7 +308,7 @@ PaymentProtocol.prototype.sendPayment = function sendPayment(currency, signedRaw
  * @param signedRawTransaction {string} Hexadecimal format raw signed transaction
  * @param url {string} the payment protocol specific url (https)
  */
-PaymentProtocol.prototype.sendPaymentAsync = util.promisify(PaymentProtocol.prototype.sendPayment);
+PaymentProtocol.prototype.broadcastPaymentAsync = util.promisify(PaymentProtocol.prototype.broadcastPayment);
 
 module.exports = PaymentProtocol;
 
