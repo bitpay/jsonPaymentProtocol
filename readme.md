@@ -1,6 +1,14 @@
 ### JSON Payment Protocol Interface
 
-This is the first version of the JSON payment protocol interface. If you have questions about the specification itself, [view the documentation](specification.md).
+To make it easier for wallet and exchange developers to implement the security and user experience improvements that come with Payment Protocol (Bitcoin Improvement Proposal 70, or BIP70), we've created our own Payment Protocol interface using JSON.
+
+Our interface and implementation spec deviates slightly from the BIP-70 implementation of Payment Protocol. The JSON interface provides for direct communication between a wallet and BitPay's (or a merchant's) servers. If a wallet submits an incorrect payment to BitPay or a merchant, the receiving server will reject the transaction. This prevents any transactions which will result in a failed payment from reaching the blockchain and costing users unnecessary miner fees.
+
+By enabling wallets to verify payment requests signed with ECDSA signatures, the JSON Payment Protocol interface also provides an alternative to supporting and verifying a PKI/X.509 SSL certificate authority (CA) chain.
+
+This interface is currency-agnostic, so it will work seamlessly with other currencies accepted on BitPay invoices (or by other merchants using this Payment Protocol spec) in the future.
+
+If you have questions about the specification itself, [view the documentation](specification.md).
 
 ### Getting Started
 
@@ -59,7 +67,7 @@ paymentProtocol
   .then((paymentRequest) => {
     console.log('Payment request retrieved');
     console.log(paymentRequest);
-    
+
     //TODO: Create the rawTransaction and sign it in your wallet instead of this, do NOT broadcast yet
     let currency = 'BTC'
     let signedRawTransaction = '02000000010c2b0d60448d5cdfebe222014407bdb408b8427f837447484911efddea700323000000006a47304402201d3ed3117f1968c3b0a078f15f8462408c745ff555b173eff3dfe0a25e063c0c02200551572ec33d45ece8e64275970bd1b1694621f0ed8fac2f7e18095f170fe3fe012102d4edb773e3bd94e1251790f5cc543cbfa76c2b0abad14898674b1c4e27176ef2ffffffff02c44e0100000000001976a914dd826377dcf2075e5065713453cfad675ba9434f88aca070002a010000001976a914e7d0344ba970301e93cd7b505c7ae1b5bcf5639288ac00000000';
@@ -88,4 +96,3 @@ new JsonPaymentProtocol({
 
 ### URI Formats
 You can provide either the `bitcoin:?r=https://bitpay.com/i/invoice` format or `https://bitpay.com/i/invoice` directly.
-
