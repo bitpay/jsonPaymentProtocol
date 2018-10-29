@@ -200,7 +200,9 @@ async.waterfall([
         console.log('Bitcoind did not decode the transaction');
         return cb(new Error('Missing decoded tx'));
       }
-      cb(null, fundedRawTransaction, signedRawTransaction, decodedTransaction.vsize);
+      // `vsize` for bitcoin core w/ segwit support, `size` for other clients
+      let signedTransactionSize = decodedTransaction.vsize || decodedTransaction.size;
+      cb(null, fundedRawTransaction, signedRawTransaction,  signedTransactionSize);
     });
   },
   function checkIfTransactionWillBeAccepted(fundedRawTransaction, signedRawTransaction, weightedSize, cb) {
