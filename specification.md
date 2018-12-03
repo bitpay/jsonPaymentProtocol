@@ -11,14 +11,15 @@ Revision 0.6
 5. (Client) Validates payment request hash
 6. (Client) Validates payment request signature
 7. (Client) Generates a payment to match conditions on payment request
-8. (Client) Submits proposed signed transaction to server
-9. (Server) Validates invoice exists and is still accepting payments
-10. (Server) Validates payment matches address, amount, and currency of invoice and has a reasonable transaction fee.
-11. (Server) Broadcasts payment to network and notifies client payment was accepted.
-12. (Client) If payment is accepted by server, wallet broadcasts payment
+8. (Client) Wallet broadcasts payment before submitting to server
+9. (Client) Submits proposed signed transaction to server
+10. (Server) Validates invoice exists and is still accepting payments
+11. (Server) Validates payment matches address, amount, and currency of invoice and has a reasonable transaction fee.
+12. (Server) Broadcasts payment to network and notifies client payment was accepted.
 
-In general, the payment should not be broadcast by the client. If at any time the payment is rejected by the server **your client must not broadcast the payment**.
-Broadcasting a payment before getting a success notification back from the server will in most cases lead to a failed payment for the sender. The sender will bear the cost of paying transaction fees yet again to get their money back.
+
+For security reasons the payment should always be broadcast to the network before being sent to the merchant. If at any time the payment is rejected by the server **your client must indicate to the user that the payment has still been sent**.
+Waiting for a success notification back from the server before broadcasting the transaction can result in users being defrauded by malicious merchants.
 
 ## Payment Request
 

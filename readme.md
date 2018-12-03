@@ -8,7 +8,7 @@ This is the first version of the JSON payment protocol interface. If you have qu
 
 ### Usage
 
-We support both callbacks and promises. For promises just add Async to the end of the function name. Be careful to follow the notes about when to broadcast your payment. **Broadcasting a payment before getting a success notification back from the server in most cases will lead to a failed payment for the sender.** The sender will bear the cost of paying transaction fees yet again to get their money back.
+We support both callbacks and promises. For promises just add Async to the end of the function name. Be careful to follow the notes about when to broadcast your payment. **For security reasons the payment should always be broadcast to the network before being sent to the merchant.**
 
 #### Callbacks
 ```js
@@ -33,13 +33,13 @@ paymentProtocol.getRawPaymentRequest(requestUrl, function (err, response) {
     let currency = 'BTC'
     let signedRawTransaction = '02000000010c2b0d60448d5cdfebe222014407bdb408b8427f837447484911efddea700323000000006a47304402201d3ed3117f1968c3b0a078f15f8462408c745ff555b173eff3dfe0a25e063c0c02200551572ec33d45ece8e64275970bd1b1694621f0ed8fac2f7e18095f170fe3fe012102d4edb773e3bd94e1251790f5cc543cbfa76c2b0abad14898674b1c4e27176ef2ffffffff02c44e0100000000001976a914dd826377dcf2075e5065713453cfad675ba9434f88aca070002a010000001976a914e7d0344ba970301e93cd7b505c7ae1b5bcf5639288ac00000000';
 
+    //TODO: Broadcast payment to network here
     paymentProtocol.sendPayment(currency, signedRawTransaction, paymentRequest.paymentUrl, function(err, response) {
       if (err) {
-        //DO NOT BROADCAST PAYMENT
-        return console.log('Error sending payment to server');
+        //WALLET MUST INDICATE TO USER THAT THE TRANSACTION WAS SENT
+        return console.log('PaymentACK could not be processed. Payment was sent; please manually verify that payment was received.');
       }
       console.log('Payment sent successfully');
-      //TODO: Broadcast payment to network here
     });
   });
 });
@@ -64,15 +64,15 @@ paymentProtocol
     let currency = 'BTC'
     let signedRawTransaction = '02000000010c2b0d60448d5cdfebe222014407bdb408b8427f837447484911efddea700323000000006a47304402201d3ed3117f1968c3b0a078f15f8462408c745ff555b173eff3dfe0a25e063c0c02200551572ec33d45ece8e64275970bd1b1694621f0ed8fac2f7e18095f170fe3fe012102d4edb773e3bd94e1251790f5cc543cbfa76c2b0abad14898674b1c4e27176ef2ffffffff02c44e0100000000001976a914dd826377dcf2075e5065713453cfad675ba9434f88aca070002a010000001976a914e7d0344ba970301e93cd7b505c7ae1b5bcf5639288ac00000000';
 
+    //TODO: Broadcast payment to network here
     return paymentProtocol.sendPaymentAsync(currency, signedRawTransaction, paymentRequest.paymentUrl);
   })
   .then((response) => {
     console.log('Payment sent successfully');
-    //TODO: Broadcast payment to network here
   })
   .catch((err) => {
-    //DO NOT BROADCAST PAYMENT
-    return console.log('Error processing payment request', err);
+    //WALLET MUST INDICATE TO USER THAT THE TRANSACTION WAS SENT
+    return console.log('PaymentACK could not be processed. Payment was sent; please manually verify that payment was received.', err);
   });
 ```
 

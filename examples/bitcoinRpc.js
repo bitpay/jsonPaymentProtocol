@@ -212,19 +212,7 @@ async.waterfall([
       });
     });
   },
-  function sendTransactionToServer(signedRawTransaction, cb) {
-    paymentProtocol.sendPayment(config.currency, signedRawTransaction, paymentUrl, function (err, response) {
-      if (err) {
-        console.log('Error sending payment to server', err);
-        return cb(err);
-      }
-      else {
-        console.log('Payment accepted by server');
-        return cb(null, signedRawTransaction);
-      }
-    });
-  },
-  //Note we only broadcast AFTER a SUCCESS response from the server
+  //Note we must broadcast BEFORE sending to the server for security reasons
   function broadcastPayment(signedRawTransaction, cb) {
     let command = {
       jsonrpc: '1.0',
@@ -242,6 +230,18 @@ async.waterfall([
         return cb(new Error('Failed to broadcast tx'));
       }
       cb();
+    });
+  },
+  function sendTransactionToServer(signedRawTransaction, cb) {
+    paymentProtocol.sendPayment(config.currency, signedRawTransaction, paymentUrl, function (err, response) {
+      if (err) {
+        console.log('PaymentACK could not be processed. Payment was sent; please manually verify that payment was received.', err);
+        return cb(err);
+      }
+      else {
+        console.log('Payment accepted by server');
+        return cb(null, signedRawTransaction);
+      }
     });
   }
 ], function (err) {
