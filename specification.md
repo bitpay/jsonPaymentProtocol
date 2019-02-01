@@ -1,6 +1,6 @@
 # JSON Payment Protocol Specification
 
-Revision 0.6
+Revision 0.7
 
 ## Application Logic
 
@@ -11,19 +11,25 @@ Revision 0.6
 5. (Client) Validates payment request hash
 6. (Client) Validates payment request signature
 7. (Client) Generates a payment to match conditions on payment request
-8. (Client) Submits proposed signed transaction to server
+8. (Client) Submits proposed unsigned transaction and size of signed transaction to server
 9. (Server) Validates invoice exists and is still accepting payments
 10. (Server) Validates payment matches address, amount, and currency of invoice and has a reasonable transaction fee.
-11. (Server) Broadcasts payment to network and notifies client payment was accepted.
-12. (Client) If payment is accepted by server, wallet broadcasts payment
+11. (Server) Notifies client payment will be accepted
+12. (Client) Sends payment to server and broadcasts to p2p network
+13. (Server) Validates signed payment and broadcasts payment to network.
 
-In general, the payment should not be broadcast by the client. If at any time the payment is rejected by the server **your client must not broadcast the payment**.
+In general, the payment should not be broadcast by the client. If at time of verification the payment is rejected by the server **your client must not broadcast the payment**.
 Broadcasting a payment before getting a success notification back from the server will in most cases lead to a failed payment for the sender. The sender will bear the cost of paying transaction fees yet again to get their money back.
+
+![Payment Flow](/paymentFlow.png?raw=true)
 
 ## Payment Request
 
 ### Request
 A GET request should be made to the payment protocol url.
+
+#### Headers
+* `Accept` should be set to `application/payment-request`.
 
 ### Response
 The response will be a JSON format payload quite similar to the BIP70 format.
@@ -67,7 +73,57 @@ On a successful request, the response will contain the following headers.
 }
 ```
 
+
+## Payment Verification Payload
+Our next step is to generate a funded transaction and send the unsigned version as well as the weighted size to the server, to make sure the
+payment is valid and will be accepted.
+
+### Request
+A POST request should be made to the payment protocol url with a `Content-Type` header set to `application/verify-payment`. A JSON format body should be included with the following fields:
+
+```
+{
+  "currency": "<currency 3 letter code>",
+  "unsignedTransaction": "<unsigned transaction in hexedecimal string format>",
+  "weightedSize": <signed transaction weighted size in bytes>
+}
+```
+
+#### Example Request Body
+```
+{
+  "currency": "BTC",
+  "unsignedTransaction": "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"
+  "weightedSize": 225
+}
+```
+
+### Curl Example
+```
+curl -v -H 'Content-Type: application/verify-payment' -d '{"currency": "BTC", "unsignedTransaction": "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000", "weightedSize":225}' https://test.bitpay.com/i/YFujEPNdx8WGEUsysjdLfa 
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to test.bitpay.com (127.0.0.1) port 443 (#0)
+> POST /i/YFujEPNdx8WGEUsysjdLfa HTTP/1.1
+> Host: test.bitpay.com
+> User-Agent: curl/7.58.0
+> Accept: */*
+> Content-Type: application/verify-payment
+> Content-Length: 304
+> 
+* upload completely sent off: 304 out of 304 bytes
+< HTTP/1.1 200 OK
+< Strict-Transport-Security: max-age=31536000
+< Content-Length: 343
+< Date: Thu, 31 Jan 2019 21:51:31 GMT
+< Connection: keep-alive
+< 
+* Connection #0 to host test.bitpay.com left intact
+{"payment":{"currency":"BTC","unsignedTransaction":"0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000","weightedSize":225},"memo":"Payment appears valid"}% 
+```
+
 ## Payment Payload
+Now that the server has told us our payment is acceptable, we can send the fully signed transaction.
 
 ### Request
 A POST request should be made to the payment protocol url with a `Content-Type` header set to `application/payment`. A JSON format body should be included with the following fields:
@@ -111,7 +167,7 @@ The response will be a JSON format payload containing the original payment body 
 curl -v -H 'Content-Type: application/payment' -d '{"currency": "BTC", "transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]}' https://test.bitpay.com/i/7QBCJ2TpazTKKnczzJQJMc
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
-* Connected to test.bitpay.com (127.0.0.1) port 8088 (#0)
+* Connected to test.bitpay.com (127.0.0.1) port 443 (#0)
 * TLS 1.2 connection using TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 > POST /i/7QBCJ2TpazTKKnczzJQJMc HTTP/1.1
 > Host: test.bitpay.com
@@ -327,5 +383,6 @@ Another issue you may see is that you are being redirected to `bitpay.com/invoic
 |Mime|Description|
 |---|---|
 |application/payment-request| Associated with the server's payment request, this specified on the client `Accept` header when retrieving the payment request|
+|application/verify-payment| Used by the client when sending their proposed unsigned payment transaction payload|
 |application/payment| Used by the client when sending their proposed payment transaction payload|
 |application/payment-ack| Used by the server to state acceptance of the client's proposed payment transaction|
