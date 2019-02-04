@@ -6,36 +6,12 @@ const promptly = require('promptly');
 const JsonPaymentProtocol = require('../index'); //or require('json-payment-protocol')
 const paymentProtocol = new JsonPaymentProtocol({strictSSL: false});
 
-let config = {
-  network: 'test',
-  currency: 'BTC',
-  rpcServer: {
-    username: 'fakeUser',
-    password: 'fakePassword',
-    ipAddress: '127.0.0.1',
-    port: '18332'
-  },
-  trustedKeys: {
-    // The idea is that you or the wallet provider will populate this with keys that are trusted, we have provided a few possible approaches
-    // in the specification.md document within the 'key-storing suggestions' section
+let config;
 
-    // Each key here is the pubkey hash so that we can do quick look-ups using the x-identity header sent in the payment request
-    'mh65MN7drqmwpCRZcEeBEE9ceQCQ95HtZc': {
-      // This is displayed to the user, somewhat like the organization field on an SSL certificate
-      owner: 'BitPay (TESTNET ONLY - DO NOT TRUST FOR ACTUAL BITCOIN)',
-      // Which bitcoin networks is this key valid for (regtest, test, main)
-      networks: ['test'],
-      // Which domains this key is valid for
-      domains: ['test.bitpay.com'],
-      // The actual public key which should be used to validate the signatures
-      publicKey: '03159069584176096f1c89763488b94dbc8d5e1fa7bf91f50b42f4befe4e45295a',
-    }
-  }
-};
-
-if (config.rpcServer.username === 'fakeUser') {
-  return console.log('You should update the config in this file to match the actual configuration of your bitcoind' +
-    ' RPC interface');
+try {
+  config = require('./config');
+} catch(e) {
+  return console.log('You need to create a config.js file in examples based on the config.example.js file');
 }
 
 /**
@@ -200,7 +176,10 @@ async.waterfall([
         console.log('Bitcoind did not decode the transaction');
         return cb(new Error('Missing decoded tx'));
       }
-      cb(null, fundedRawTransaction, signedRawTransaction, decodedTransaction.vsize);
+
+      // `vsize` for bitcoin core w/ segwit support, `size` for other clients
+      let signedTransactionSize = decodedTransaction.vsize || decodedTransaction.size;
+      cb(null, fundedRawTransaction, signedRawTransaction,  signedTransactionSize);
     });
   },
   function checkIfTransactionWillBeAccepted(fundedRawTransaction, signedRawTransaction, weightedSize, cb) {
@@ -248,7 +227,7 @@ async.waterfall([
   function broadcastPayment(signedRawTransaction, cb) {
     async.parallel([
       function sendToServer(cb) {
-        paymentProtocol.broadcastPayment(config.currency, signedRawTransaction, paymentUrl, function(err) {
+        paymentProtocol.sendSignedPayment(config.currency, signedRawTransaction, paymentUrl, function(err) {
           if (err) {
             console.log('Error sending payment to server', err);
             return cb(err);

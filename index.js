@@ -196,7 +196,7 @@ PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProto
  * Sends a given payment to the server for validation
  * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
  * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
- * @param weightedSize {number} Weighted size of the transaction
+ * @param weightedSize {number} Weighted size of the transaction in bytes
  * @param url {string} the payment protocol specific url (https)
  * @param callback {function} (err, response)
  */
@@ -221,7 +221,7 @@ PaymentProtocol.prototype.sendPaymentForVerification = function sendPayment(curr
     },
     body: JSON.stringify({
       currency: currency,
-      transactions: [unsignedRawTransaction],
+      unsignedTransaction: unsignedRawTransaction,
       weightedSize: weightedSize
     })
   });
@@ -249,7 +249,7 @@ PaymentProtocol.prototype.sendPaymentForVerification = function sendPayment(curr
  * Sends a given payment to the server for validation
  * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
  * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
- * @param weightedSize {number} Weighted size of the transaction
+ * @param weightedSize {number} Weighted size of the transaction in bytes
  * @param url {string} the payment protocol specific url (https)
  */
 PaymentProtocol.prototype.sendPaymentForVerificationAsync = util.promisify(PaymentProtocol.prototype.sendPaymentForVerification);
@@ -261,7 +261,7 @@ PaymentProtocol.prototype.sendPaymentForVerificationAsync = util.promisify(Payme
  * @param url {string} the payment protocol specific url (https)
  * @param callback {function} (err, response)
  */
-PaymentProtocol.prototype.broadcastPayment = function broadcastPayment(currency, signedRawTransaction, url, callback) {
+PaymentProtocol.prototype.sendSignedPayment = function sendSignedPayment(currency, signedRawTransaction, url, callback) {
   let paymentResponse;
 
   //Basic sanity checks
@@ -303,12 +303,12 @@ PaymentProtocol.prototype.broadcastPayment = function broadcastPayment(currency,
 };
 
 /**
- * Sends a given payment to the server for validation
+ * Sends actual payment to server
  * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
  * @param signedRawTransaction {string} Hexadecimal format raw signed transaction
  * @param url {string} the payment protocol specific url (https)
  */
-PaymentProtocol.prototype.broadcastPaymentAsync = util.promisify(PaymentProtocol.prototype.broadcastPayment);
+PaymentProtocol.prototype.sendSignedPaymentAsync = util.promisify(PaymentProtocol.prototype.sendSignedPayment);
 
 module.exports = PaymentProtocol;
 
