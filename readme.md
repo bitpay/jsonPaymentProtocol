@@ -30,16 +30,28 @@ paymentProtocol.getRawPaymentRequest(requestUrl, function (err, response) {
     console.log(paymentRequest);
 
     //TODO: Create the rawTransaction and sign it in your wallet instead of this, do NOT broadcast yet
-    let currency = 'BTC'
-    let signedRawTransaction = '02000000010c2b0d60448d5cdfebe222014407bdb408b8427f837447484911efddea700323000000006a47304402201d3ed3117f1968c3b0a078f15f8462408c745ff555b173eff3dfe0a25e063c0c02200551572ec33d45ece8e64275970bd1b1694621f0ed8fac2f7e18095f170fe3fe012102d4edb773e3bd94e1251790f5cc543cbfa76c2b0abad14898674b1c4e27176ef2ffffffff02c44e0100000000001976a914dd826377dcf2075e5065713453cfad675ba9434f88aca070002a010000001976a914e7d0344ba970301e93cd7b505c7ae1b5bcf5639288ac00000000';
+    let currency = 'BTC';
+    
+    // Funded unsigned raw transaction
+    let unsignedRawTransaction = '02000000016b7bceefa3ff3bf6f3ad39a99cf6def9126a6edf8f49462bd06e4cb74366dab00100000000feffffff0248590095000000001976a9141b4f4e0c5354ce950ea702cc79be34885e7a60af88ac0c430100000000001976a914072053b485736e002f665d5fc65c443fb379256e88ac00000000'
+    // Signed version of that transaction
+    let signedRawTransaction = '02000000016b7bceefa3ff3bf6f3ad39a99cf6def9126a6edf8f49462bd06e4cb74366dab0010000006b4830450221008d8852576eb8e505832a53569dd756a1d0c304606c27e81d0ac1a83e78250969022058b2bde3f2e1ea7e6a62e69d99f7219e846f04c1c58ff163e2996669a935c31501210206e855c3cfd24a5e154cf94ff7a214d598dfc2d62966011fd83c360cf229777ffeffffff0248590095000000001976a9141b4f4e0c5354ce950ea702cc79be34885e7a60af88ac0c430100000000001976a914072053b485736e002f665d5fc65c443fb379256e88ac00000000';
+    // total size of the signed transaction (note the way shown here is incorrect for segwit, see the code in /examples for getting vsize from RPC)
+    let signedRawTransactionSize = Buffer.from(signedRawTransaction, 'hex').byteLength;
 
-    paymentProtocol.sendPayment(currency, signedRawTransaction, paymentRequest.paymentUrl, function(err, response) {
+    paymentProtocol.sendPaymentForVerification(currency, unsignedRawTransaction, signedRawTransactionSize, paymentRequest.paymentUrl, function(err, response) {
       if (err) {
-        //DO NOT BROADCAST PAYMENT
-        return console.log('Error sending payment to server');
+        // If server rejects, stop, don't broadcast, show user the error
+        return console.log('Error verifying payment with server', err);
       }
-      console.log('Payment sent successfully');
-      //TODO: Broadcast payment to network here
+
+      // Execute these in parallel
+      // Sending payment to server via payment protocol
+      paymentProtocol.broadcastPayment(currency, signedRawTransaction, paymentRequest.paymentUrl, function(err, response) {
+        console.log('Ignore any errors here if you already received verified above');
+      });
+      // Sending payment to bitcoin p2p network
+      myWallet.broadcastp2p(signedRawTransaction);
     });
   });
 });
@@ -51,29 +63,37 @@ const JsonPaymentProtocol = require('json-payment-protocol');
 const paymentProtocol = new JsonPaymentProtocol();
 
 let requestUrl = 'bitcoin:?r=https://test.bitpay.com/i/Jr629pwsXKdTCneLyZja4t';
-paymentProtocol
-  .getRawPaymentRequestAsync(requestUrl)
-  .then((response) => {
-    return paymentProtocol.parsePaymentRequestAsync(response.rawBody, response.headers);
-  })
-  .then((paymentRequest) => {
-    console.log('Payment request retrieved');
-    console.log(paymentRequest);
-    
-    //TODO: Create the rawTransaction and sign it in your wallet instead of this, do NOT broadcast yet
-    let currency = 'BTC'
-    let signedRawTransaction = '02000000010c2b0d60448d5cdfebe222014407bdb408b8427f837447484911efddea700323000000006a47304402201d3ed3117f1968c3b0a078f15f8462408c745ff555b173eff3dfe0a25e063c0c02200551572ec33d45ece8e64275970bd1b1694621f0ed8fac2f7e18095f170fe3fe012102d4edb773e3bd94e1251790f5cc543cbfa76c2b0abad14898674b1c4e27176ef2ffffffff02c44e0100000000001976a914dd826377dcf2075e5065713453cfad675ba9434f88aca070002a010000001976a914e7d0344ba970301e93cd7b505c7ae1b5bcf5639288ac00000000';
+let response = await paymentProtocol.getRawPaymentRequestAsync(requestUrl);
+let paymentRequest = await paymentProtocol.parsePaymentRequestAsync(response.rawBody, response.headers);
 
-    return paymentProtocol.sendPaymentAsync(currency, signedRawTransaction, paymentRequest.paymentUrl);
-  })
-  .then((response) => {
-    console.log('Payment sent successfully');
-    //TODO: Broadcast payment to network here
-  })
-  .catch((err) => {
-    //DO NOT BROADCAST PAYMENT
-    return console.log('Error processing payment request', err);
-  });
+console.log('Payment request retrieved');
+console.log(paymentRequest);
+
+//TODO: Create the rawTransaction and sign it in your wallet instead of this example, do NOT broadcast yet
+// Funded unsigned raw transaction
+let unsignedRawTransaction = '02000000016b7bceefa3ff3bf6f3ad39a99cf6def9126a6edf8f49462bd06e4cb74366dab00100000000feffffff0248590095000000001976a9141b4f4e0c5354ce950ea702cc79be34885e7a60af88ac0c430100000000001976a914072053b485736e002f665d5fc65c443fb379256e88ac00000000'
+// Signed version of that transaction
+let signedRawTransaction = '02000000016b7bceefa3ff3bf6f3ad39a99cf6def9126a6edf8f49462bd06e4cb74366dab0010000006b4830450221008d8852576eb8e505832a53569dd756a1d0c304606c27e81d0ac1a83e78250969022058b2bde3f2e1ea7e6a62e69d99f7219e846f04c1c58ff163e2996669a935c31501210206e855c3cfd24a5e154cf94ff7a214d598dfc2d62966011fd83c360cf229777ffeffffff0248590095000000001976a9141b4f4e0c5354ce950ea702cc79be34885e7a60af88ac0c430100000000001976a914072053b485736e002f665d5fc65c443fb379256e88ac00000000';
+// total size of the signed transaction (note the way shown here is incorrect for segwit, see the code in /examples for getting vsize from RPC)
+let signedRawTransactionSize = Buffer.from(signedRawTransaction, 'hex').byteLength;
+
+// This sends the proposed unsigned transaction to the server
+try {
+  await paymentProtocol.sendPaymentForVerificationAsync(currency, unsignedRawTransaction, signedRawTransactionSize, paymentRequest.paymentUrl);
+} catch (e) {
+  // Payment was rejected, do not continue, tell the user why they were rejected
+  return console.log('Proposed payment rejected', e);
+}
+
+// This sends the fully signed transaction
+try {
+  await paymentProtocol.sendSignedPaymentAsync(currency, signedRawTransaction, paymentRequest.paymentUrl);
+} catch (e) {
+  // ignore errors here 
+}
+
+// Broadcast from your wallet to p2p
+myWallet.broadcastp2p(signedRawTransaction);
 ```
 
 ### Options
