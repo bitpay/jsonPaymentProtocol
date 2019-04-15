@@ -1,6 +1,6 @@
 # JSON Payment Protocol Specification V2
 
-Revision 0.7
+Revision 0.1
 
 ## Application Logic
 
@@ -10,6 +10,7 @@ Revision 0.7
 4. (Server) Verifies invoice exists and is still accepting payments, responds with payment request
 5. (Client) Validates payment request hash
 6. (Client) Validates payment request signature
+7. (Client) Selects a currency from the list of payment options
 7. (Client) Generates a payment to match conditions on payment request
 8. (Client) Submits proposed unsigned transaction and size of signed transaction to server
 9. (Server) Validates invoice exists and is still accepting payments
@@ -58,7 +59,16 @@ Each payment option includes
 * `instructions` - An array of instructions for this currency
 * `tokenInformation` - An optional object that includes currency specific information. If this isn't present, then we're using the chain's native currency
 
+#### Payment Request Types
 ```typescript
+interface PaymentRequest {
+  time: Date;
+  expires: Date;
+  memo: string;
+  paymentUrl: string;
+  paymentId: string;
+  paymentOptions: Array<CurrencyInstruction<BtcInstruction> | CurrencyInstruction<EthInstruction>>;
+}
 
 type CurrencyInstruction<T> = {
   chain: string;
@@ -70,7 +80,6 @@ type CurrencyInstruction<T> = {
     address: string
   }
 };
-
 
 interface BtcInstruction {
   requiredFeePerByte: number;
