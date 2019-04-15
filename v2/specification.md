@@ -11,13 +11,13 @@ Revision 0.1
 5. (Client) Validates payment request hash
 6. (Client) Validates payment request signature
 7. (Client) Selects a currency from the list of payment options
-7. (Client) Generates a payment to match conditions on payment request
-8. (Client) Submits proposed unsigned transaction and size of signed transaction to server
-9. (Server) Validates invoice exists and is still accepting payments
-10. (Server) Validates payment matches address, amount, and currency of invoice and has a reasonable transaction fee.
-11. (Server) Notifies client payment will be accepted
-12. (Client) Sends payment to server and broadcasts to p2p network
-13. (Server) Validates signed payment and broadcasts payment to network.
+8. (Client) Generates a payment to match conditions on payment request
+9. (Client) Submits proposed unsigned transaction and size of signed transaction to server
+10. (Server) Validates invoice exists and is still accepting payments
+11. (Server) Validates payment matches address, amount, and currency of invoice and has a reasonable transaction fee.
+12. (Server) Notifies client payment will be accepted
+13. (Client) Sends payment to server and broadcasts to p2p network
+14. (Server) Validates signed payment and broadcasts payment to network.
 
 In general, the payment should not be broadcast by the client. If at time of verification the payment is rejected by the server **your client must not broadcast the payment**.
 Broadcasting a payment before getting a success notification back from the server will in most cases lead to a failed payment for the sender. The sender will bear the cost of paying transaction fees yet again to get their money back.
