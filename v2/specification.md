@@ -193,7 +193,7 @@ A POST request should be made to the payment protocol url with a `Content-Type` 
   "chain": "<chain 3 letter code>",
   "currency": "<currency 3 letter code>",
   "unsignedTransactions": "<array of unsigned transactions in hexedecimal string format>",
-  "weightedSizes": <array signed transaction weighted size in bytes>
+  "weightedSizes": "<array signed transaction weighted size in bytes>"
 }
 ```
 
