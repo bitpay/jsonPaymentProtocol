@@ -97,7 +97,7 @@ interface EthInstruction {
 ```
 
 #### Response Body Example
-```
+```JSON
 {
   time: new Date("2018-01-12T22:04:54.364Z"),
   expires: new Date("2018-01-12T22:19:54.364Z"),
@@ -192,7 +192,7 @@ payment is valid and will be accepted.
 ### Request
 A POST request should be made to the payment protocol url with a `Content-Type` header set to `application/verify-payment`. A JSON format body should be included with the following fields:
 
-```
+```JSON
 {
   "chain": "<chain 3 letter code>",
   "currency": "<currency 3 letter code>",
@@ -202,7 +202,7 @@ A POST request should be made to the payment protocol url with a `Content-Type` 
 ```
 
 #### Example Request Body
-```
+```JSON
 {
   "chain": "BTC",
   "currency": "BTC",
@@ -243,7 +243,7 @@ Now that the server has told us our payment is acceptable, we can send the fully
 ### Request
 A POST request should be made to the payment protocol url with a `Content-Type` header set to `application/payment`. A JSON format body should be included with the following fields:
 
-```
+```JSON
 {
   "chain": "<chain 3 letter code>",
   "currency": "<currency 3 letter code>",
@@ -254,7 +254,7 @@ A POST request should be made to the payment protocol url with a `Content-Type` 
 ```
 
 #### Example Request Body
-```
+```JSON
 {
   "chain": "BTC",
   "currency": "BTC",
@@ -268,7 +268,7 @@ A POST request should be made to the payment protocol url with a `Content-Type` 
 The response will be a JSON format payload containing the original payment body and a memo field which should be displayed to the user.
 
 #### Response Example
-```
+```JSON
 {
   "payment": {
     "transactions": [
@@ -319,7 +319,7 @@ The JSON payment protocol provider will make keys available via the route:
 
 This route will serve a JSON payload which conforms to the format:
 
-```
+```JSON
 {
   "owner": "Company name that may be displayed to the user",
   "expirationDate": "ISO format date when these keys expire",
@@ -334,7 +334,7 @@ This route will serve a JSON payload which conforms to the format:
 ```
 
 An example of this fully completed:
-```
+```JSON
 {
   "owner": "BitPay, Inc.",
   "expirationDate": "2018-06-01T00:00:00.000Z",
@@ -357,7 +357,7 @@ The SHA256 should be performed on the raw body of the keys sent down by the serv
 This ensures that even if the provider's SSL certificate is compromised that the attacker cannot forge payment requests.
 
 This route will server a JSON payload which conforms to the format:
-```
+```JSON
 {
   "keyHash": "SHA256 hash of key payload",
   "signatures": [
@@ -371,7 +371,7 @@ This route will server a JSON payload which conforms to the format:
 ```
 
 An example of this fully completed:
-```
+```JSON
 {
   "keyHash": "622c5dc05501b848221a9e0b2e9a84c0869cdb7604d785a0486fe817c9c34fe1",
   "signatures": [
