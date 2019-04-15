@@ -99,88 +99,84 @@ interface EthInstruction {
 #### Response Body Example
 ```JSON
 {
-  time: new Date("2018-01-12T22:04:54.364Z"),
-  expires: new Date("2018-01-12T22:19:54.364Z"),
-  memo:
-    "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-  paymentUrl: "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-  paymentId: "TmyrxFvAi4DjFNy3c7EjVm",
-  paymentOptions: [
-    {
-      network: "mainnet",
-      chain: "BTC",
-      instructions: [
+    "time": "2018-01-12T22:04:54.364Z",
+    "expires": "2018-01-12T22:19:54.364Z",
+    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
+    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
+    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
+    "paymentOptions": [
         {
-          requiredFeePerByte: 1000,
-          outputs: [
-            {
-              amount: 39300,
-              address: "mthVG9kuRTJQtXieJVDSrrvWyM7QDZ3rcV"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      chain: "BCH",
-      network: "mainnet",
-      instructions: [
-        {
-          requiredFeePerByte: 1000,
-          outputs: [
-            {
-              amount: 39300,
-              address: "mthVG9kuRTJQtXieJVDSrrvWyM7QDZ3rcV"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      chain: "ETH",
-      network: "mainnet",
-      instructions: [
-        {
-          gasPrice: "0x09184e72a000",
-          gasLimit: "0x2710",
-          to: "0xd8fD14fB0E0848Cb931c1E54a73486c4B968BE3D",
-          value: "0x64",
-          chainId: 1,
-          data:
-            "0x000000000000000000000000000000000000000000000000000000000000000000000000"
-        }
-      ]
-    },
-    {
-      chain: "ETH",
-      network: "mainnet",
-      tokenInformation: {
-        currency: "GUSD",
-        type: "ERC20",
-        address: "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1"
-      },
-      instructions: [
-        {
-          gasPrice: "0x09184e72a000",
-          gasLimit: "0x5958",
-          to: "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
-          value: "0x00",
-          chainId: 1,
-          data:
-            "0x095ea7b3000000000000000000000000d8fd14fb0e0848cb931c1e54a73486c4b968be3d0000000000000000000000000000000000000000000000000000000000000064"
+            "network": "mainnet",
+            "chain": "BTC",
+            "instructions": [
+                {
+                    "requiredFeePerByte": 1000,
+                    "outputs": [
+                        {
+                            "amount": 39300,
+                            "address": "mthVG9kuRTJQtXieJVDSrrvWyM7QDZ3rcV"
+                        }
+                    ]
+                }
+            ]
         },
         {
-          gasPrice: "0x09184e72a000",
-          gasLimit: "0x5958",
-          to: "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
-          value: "0x00",
-          chainId: 1,
-          data:
-            "0xa9059cbb0000000000000000000000002e05e01f8a9df371fcdd8342d3834a57267a0cd10000000000000000000000000000000000000000000000000000000000000064"
+            "chain": "BCH",
+            "network": "mainnet",
+            "instructions": [
+                {
+                    "requiredFeePerByte": 1000,
+                    "outputs": [
+                        {
+                            "amount": 39300,
+                            "address": "mthVG9kuRTJQtXieJVDSrrvWyM7QDZ3rcV"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "chain": "ETH",
+            "network": "mainnet",
+            "instructions": [
+                {
+                    "gasPrice": "0x09184e72a000",
+                    "gasLimit": "0x2710",
+                    "to": "0xd8fD14fB0E0848Cb931c1E54a73486c4B968BE3D",
+                    "value": "0x64",
+                    "chainId": 1,
+                    "data": "0x000000000000000000000000000000000000000000000000000000000000000000000000"
+                }
+            ]
+        },
+        {
+            "chain": "ETH",
+            "network": "mainnet",
+            "tokenInformation": {
+                "currency": "GUSD",
+                "type": "ERC20",
+                "address": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1"
+            },
+            "instructions": [
+                {
+                    "gasPrice": "0x09184e72a000",
+                    "gasLimit": "0x5958",
+                    "to": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
+                    "value": "0x00",
+                    "chainId": 1,
+                    "data": "0x095ea7b3000000000000000000000000d8fd14fb0e0848cb931c1e54a73486c4b968be3d0000000000000000000000000000000000000000000000000000000000000064"
+                },
+                {
+                    "gasPrice": "0x09184e72a000",
+                    "gasLimit": "0x5958",
+                    "to": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
+                    "value": "0x00",
+                    "chainId": 1,
+                    "data": "0xa9059cbb0000000000000000000000002e05e01f8a9df371fcdd8342d3834a57267a0cd10000000000000000000000000000000000000000000000000000000000000064"
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
 ```
 
