@@ -21,7 +21,7 @@ Revision 0.1
 In general, the payment should not be broadcast by the client. If at time of verification the payment is rejected by the server **your client must not broadcast the payment**.
 Broadcasting a payment before getting a success notification back from the server will in most cases lead to a failed payment for the sender. The sender will bear the cost of paying transaction fees yet again to get their money back.
 
-![Payment Flow](/paymentFlow.png?raw=true)
+![Payment Flow](flow.png)
 
 ## Payment Options
 
