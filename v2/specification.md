@@ -36,35 +36,49 @@ A list of payment options will be returned.
 
 ```
 {
-    "time": "2018-01-12T22:04:54.364Z",
-    "expires": "2018-01-12T22:19:54.364Z",
-    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
-    "paymentOptions": [
-        {
-            "network": "mainnet",
-            "chain": "BTC"
-        },
-        {
-            "chain": "BCH",
-            "network": "mainnet"
-        },
-        {
-            "chain": "ETH",
-            "network": "mainnet"
-        },
-        {
-            "chain": "ETH",
-            "network": "mainnet",
-            "currency": "GUSD",
-            "tokenInformation": {
-                "type": "ERC20",
-                "address": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1"
-            }
-        }
-    ]
-}
+  time: new Date("2018-01-12T22:04:54.364Z"),
+  expires: new Date("2018-01-12T22:19:54.364Z"),
+  memo:
+    "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
+  paymentUrl: "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
+  paymentId: "TmyrxFvAi4DjFNy3c7EjVm",
+  paymentOptions: [
+    {
+      network: "mainnet",
+      chain: "BTC",
+      estimatedAmounts: {
+        BTC: 100000000
+      }
+    },
+    {
+      chain: "BCH",
+      network: "mainnet",
+      estimatedAmounts: {
+        BCH: 1950000000
+      }
+    },
+    {
+      chain: "ETH",
+      network: "mainnet",
+      estimatedAmounts: {
+        ETH: 33280000000000000000
+      }
+    },
+    {
+      chain: "ETH",
+      network: "mainnet",
+      currency: "GUSD",
+      estimatedAmounts: {
+        ETH: 129999999999999,
+        GUSD: 549164
+      },
+      tokenInformation: {
+        type: "ERC20",
+        address: "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1"
+      }
+    }
+  ]
+};
 ```
 #### Body
 * `time` - ISO Date format of when the invoice was generated
