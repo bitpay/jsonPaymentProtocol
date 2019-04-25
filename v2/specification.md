@@ -28,7 +28,7 @@ Broadcasting a payment before getting a success notification back from the serve
 ### Request
 A GET request should be made to payment protcol url. 
 Example: 
- * /i/:someinvoiceid
+ * /i/:someinvoiceid/payment-options
 
 
 ### Response
@@ -102,9 +102,9 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 
 #### Examples: 
 
- * /i/:someinvoiceid?chain=BTC
- * /i/:someinvoiceid?chain=ETH
- * /i/:someinvoiceid?chain=ETH&currency=GUSD
+ * /i/:someinvoiceid/payment-details?chain=BTC
+ * /i/:someinvoiceid/payment-details?chain=ETH
+ * /i/:someinvoiceid/payment-details?chain=ETH&currency=GUSD
 
 ### Response
 #### BTC / BCH Response
