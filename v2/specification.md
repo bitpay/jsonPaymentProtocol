@@ -196,6 +196,11 @@ On a successful request, the response will contain the following headers.
 * `x-signature` - A cryptographic signature of the SHA256 hash of the payload. This is to prove that the payment request was not tampered with before being received by the wallet.
 
 #### Body
+* `time` - ISO Date format of when the invoice was generated
+* `expires` - ISO Date format of when the invoice will expire
+* `memo` - A plain text description of the payment request, can be displayed to the user / kept for records
+* `paymentUrl` - The url where the payment should be sent
+* `paymentId` - The invoice ID, can be kept for records
 * `chain` - Three letter code for the chain these instructions are valid for
 * `currency` - Optional, Three letter code for the token these instructions are valid for
 * `instructions` - An array of instructions that can be used to construct transactions that will fufill this payment
