@@ -1,12 +1,14 @@
-### JSON Payment Protocol Interface
+### JSON Payment Protocol Interface v2
 
-This is the second version of the JSON payment protocol interface. If you have questions about the specification itself, [view the documentation](v2/specification.md).
+This is the second version of the JSON payment protocol interface. If you have questions about the v2 specification itself, [view the documentation](v2/specification.md).
 
-If you have questions about the first version of the specification [view the documentation](v1/specification.md).
+[If you have questions about the first version of the specification view the documentation](v1/specification.md).
 
 
 ### Getting Started with v2
-TBD
+This is actively being implemented. The plan is to:
+* Update the bitpay side to send the v2 structure
+* Change the json-payment-protocol client code to work with v1 and v2
 
 ### Getting Started with v1
 
