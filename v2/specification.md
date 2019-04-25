@@ -1,4 +1,4 @@
-# JSON Payment Protocol Specification V2
+# JSON Payment Protocol Specification v2
 
 Revision 0.1
 

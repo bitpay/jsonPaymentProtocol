@@ -1,12 +1,18 @@
 ### JSON Payment Protocol Interface
 
-This is the first version of the JSON payment protocol interface. If you have questions about the specification itself, [view the documentation](specification.md).
+This is the second version of the JSON payment protocol interface. If you have questions about the specification itself, [view the documentation](v2/specification.md).
 
-### Getting Started
+If you have questions about the first version of the specification [view the documentation](v1/specification.md).
+
+
+### Getting Started with v2
+TBD
+
+### Getting Started with v1
 
 `npm install json-payment-protocol`
 
-### Usage
+### v1 Usage
 
 We support both callbacks and promises. For promises just add Async to the end of the function name. Be careful to follow the notes about when to broadcast your payment. **Broadcasting a payment before getting a success notification back from the server in most cases will lead to a failed payment for the sender.** The sender will bear the cost of paying transaction fees yet again to get their money back.
 
