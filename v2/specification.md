@@ -97,6 +97,11 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 ```
 {
     "chain": "BTC",
+    "time": "2018-01-12T22:04:54.364Z",
+    "expires": "2018-01-12T22:19:54.364Z",
+    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
+    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
+    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
     "instructions": [
         {
             "type": "transaction",
@@ -116,6 +121,11 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 ```
 {
     "chain": "ETH",
+    "time": "2018-01-12T22:04:54.364Z",
+    "expires": "2018-01-12T22:19:54.364Z",
+    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
+    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
+    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
     "instructions": [
         {
             "type": "transaction",
@@ -135,6 +145,11 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 {
     "chain": "ETH",
     "currency": "GUSD",
+    "time": "2018-01-12T22:04:54.364Z",
+    "expires": "2018-01-12T22:19:54.364Z",
+    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
+    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
+    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
     "instructions": [
         {
             "type": "transaction",
