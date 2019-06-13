@@ -114,8 +114,6 @@ A POST request should be made to the payment protocol url with `{chain, currency
 #### Examples: 
 
  * /i/:someinvoiceid
- * /i/:someinvoiceid
- * /i/:someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment-request`.
