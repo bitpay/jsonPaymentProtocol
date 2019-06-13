@@ -29,6 +29,7 @@ Broadcasting a payment before getting a success notification back from the serve
 A GET request should be made to payment protcol url. 
 Example: 
  * /i/:someinvoiceid
+
 #### Headers
 * `Accept` = `application/payment-options`.
 * `x-paypro-version` = 2
@@ -122,6 +123,13 @@ A POST request should be made to the payment protocol url with `{chain, currency
 #### Request Body
 * `chain` = a chain that was present in the payment-options response
 * `currency` = Optional, the particular currency on the chain you will pay with. Defaults to chain
+
+```JSON
+{
+  "chain": "<chain 3 letter code>",
+  "currency": "<optional (ERC20) 3 letter code>",
+}
+```
 
 
 ### Response
@@ -249,13 +257,17 @@ Our next step is to generate a funded transaction and send the unsigned version 
 payment is valid and will be accepted.
 
 ### Request
-A POST request should be made to the i/:invoiceid payment protocol url. A JSON format body should be included with the following fields:
+A POST request should be made to the payment protocol url.
+
+#### Examples: 
+ * /i/:someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment-verification`.
 * `x-paypro-version` = 2
 
 
+#### Request Body
 ```JSON
 {
   "chain": "<chain 3 letter code>",
@@ -301,11 +313,14 @@ A POST request should be made to the i/:invoiceid payment protocol url. A JSON f
 ```
 
 
-## Payment Request 
+## Payment 
 Now that the server has told us our payment is acceptable, we can send the fully signed transaction.
 
 ### Request
-A POST request should be made to /i/:invoiceid 
+A POST request should be made to the payment protocol url with `{chain, transactions, currency}`
+
+#### Examples: 
+ * /i/:someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment-verification`.
