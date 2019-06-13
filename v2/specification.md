@@ -28,7 +28,10 @@ Broadcasting a payment before getting a success notification back from the serve
 ### Request
 A GET request should be made to payment protcol url. 
 Example: 
- * /i/:someinvoiceid/payment-options
+ * /i/:someinvoiceid
+#### Headers
+* `Accept` = `application/payment-options`.
+* `x-paypro-version` = 2
 
 
 ### Response
@@ -36,49 +39,56 @@ A list of payment options will be returned.
 
 ```
 {
-  time: new Date("2018-01-12T22:04:54.364Z"),
-  expires: new Date("2018-01-12T22:19:54.364Z"),
-  memo:
-    "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-  paymentUrl: "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-  paymentId: "TmyrxFvAi4DjFNy3c7EjVm",
-  paymentOptions: [
-    {
-      network: "mainnet",
-      chain: "BTC",
-      estimatedAmounts: {
-        BTC: 100000000
-      }
-    },
-    {
-      chain: "BCH",
-      network: "mainnet",
-      estimatedAmounts: {
-        BCH: 1950000000
-      }
-    },
-    {
-      chain: "ETH",
-      network: "mainnet",
-      estimatedAmounts: {
-        ETH: 33280000000000000000
-      }
-    },
-    {
-      chain: "ETH",
-      network: "mainnet",
-      currency: "GUSD",
-      estimatedAmounts: {
-        ETH: 129999999999999,
-        GUSD: 549164
-      },
-      tokenInformation: {
-        type: "ERC20",
-        address: "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1"
-      }
-    }
-  ]
-};
+    "time": "2019-06-13T18:07:33.495Z",
+    "expires": "2019-06-13T18:22:33.495Z",
+    "memo": "Payment request for BitPay invoice R4GvGy1ZbZhLWxcHq4u2hm for merchant Micah's Cool Store",
+    "paymentUrl": "https://mriggan.bp:8088/i/R4GvGy1ZbZhLWxcHq4u2hm",
+    "paymentId": "R4GvGy1ZbZhLWxcHq4u2hm",
+    "paymentOptions": [
+        {
+            "chain": "BTC",
+            "currency": "BTC",
+            "network": "regtest",
+            "estimatedAmount": 15100,
+            "decimals": 8
+        },
+        {
+            "chain": "BCH",
+            "currency": "BCH",
+            "network": "regtest",
+            "estimatedAmount": 240800,
+            "decimals": 8
+        },
+        {
+            "chain": "ETH",
+            "currency": "ETH",
+            "network": "regtest",
+            "estimatedAmount": 3864000000000000,
+            "decimals": 18
+        },
+        {
+            "chain": "ETH",
+            "currency": "GUSD",
+            "network": "regtest",
+            "estimatedAmount": 100,
+            "decimals": 2
+        },
+        {
+            "chain": "ETH",
+            "currency": "USDC",
+            "network": "regtest",
+            "estimatedAmount": 1000000,
+            "decimals": 6
+        },
+        {
+            "chain": "ETH",
+            "currency": "PAX",
+            "network": "regtest",
+            "estimatedAmount": 1000000000000000000,
+            "decimals": 18
+        }
+    ]
+}
 ```
 #### Body
 * `time` - ISO Date format of when the invoice was generated
@@ -91,39 +101,74 @@ A list of payment options will be returned.
 #### Payment Options
 Each payment option includes
 * `chain` - The chain that the transaction should be valid on
+* `currency` - The currency on a given chain that the trasaction should be denominated in
 * `network` - The network that the transaction should be valid on
-* `currency` - Optional, token 3 letter code
-* `tokenInformation` - Optional, more information about the token if applicable
+* `estimatedAmount` - Amount of currency units required to pay this invoice
+* `decimals` - Number of decimal places the currency uses
 
 ## Payment Request
 
 ### Request
-A GET request should be made to the payment protocol url with ?chain=chain&currency=currency
+A POST request should be made to the payment protocol url with `{chain, currency}`
 
 #### Examples: 
 
- * /i/:someinvoiceid/payment-details?chain=BTC
- * /i/:someinvoiceid/payment-details?chain=ETH
- * /i/:someinvoiceid/payment-details?chain=ETH&currency=GUSD
+ * /i/:someinvoiceid
+ * /i/:someinvoiceid
+ * /i/:someinvoiceid
+
+#### Headers
+* `Content-Type` = `application/payment-request`.
+* `x-paypro-version` = 2
+
+#### Request Body
+* `chain` = a chain that was present in the payment-options response
+* `currency` = Optional, the particular currency on the chain you will pay with. Defaults to chain
+
 
 ### Response
-#### BTC / BCH Response
+#### BTC Response
 ```
 {
+    "time": "2019-06-13T18:34:09.010Z",
+    "expires": "2019-06-13T18:49:09.010Z",
+    "memo": "Payment request for BitPay invoice PfCwZLxWctSrdgYcnJM8G8 for merchant Micah's Cool Store",
+    "paymentUrl": "https://mriggan.bp:8088/i/PfCwZLxWctSrdgYcnJM8G8",
+    "paymentId": "PfCwZLxWctSrdgYcnJM8G8",
     "chain": "BTC",
-    "time": "2018-01-12T22:04:54.364Z",
-    "expires": "2018-01-12T22:19:54.364Z",
-    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
+    "network": "regtest",
     "instructions": [
         {
             "type": "transaction",
-            "requiredFeePerByte": 1000,
+            "requiredFeeRate": 20,
             "outputs": [
                 {
-                    "amount": 39300,
-                    "address": "mthVG9kuRTJQtXieJVDSrrvWyM7QDZ3rcV"
+                    "amount": 15100,
+                    "address": "my6aWcW2r3WiXpnK2MMWHfGgQ1VFmA2LLv"
+                }
+            ]
+        }
+    ]
+}
+```
+#### BCH Response
+```
+{
+    "time": "2019-06-13T18:35:19.138Z",
+    "expires": "2019-06-13T18:50:19.138Z",
+    "memo": "Payment request for BitPay invoice TiXuyEmcJRCcinoFoY3Cym for merchant Micah's Cool Store",
+    "paymentUrl": "https://mriggan.bp:8088/i/TiXuyEmcJRCcinoFoY3Cym",
+    "paymentId": "TiXuyEmcJRCcinoFoY3Cym",
+    "chain": "BCH",
+    "network": "regtest",
+    "instructions": [
+        {
+            "type": "transaction",
+            "requiredFeeRate": 1,
+            "outputs": [
+                {
+                    "amount": 239200,
+                    "address": "n3YaQSkTXrpbQyAns1kQQRxsECMn9ifx5n"
                 }
             ]
         }
@@ -134,21 +179,20 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 #### ETH Response
 ```
 {
+    "time": "2019-06-13T18:33:00.827Z",
+    "expires": "2019-06-13T18:48:00.827Z",
+    "memo": "Payment request for BitPay invoice S6cxqqUNUcMV41dfBS8XHn for merchant Micah's Cool Store",
+    "paymentUrl": "https://mriggan.bp:8088/i/S6cxqqUNUcMV41dfBS8XHn",
+    "paymentId": "S6cxqqUNUcMV41dfBS8XHn",
     "chain": "ETH",
-    "time": "2018-01-12T22:04:54.364Z",
-    "expires": "2018-01-12T22:19:54.364Z",
-    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
+    "network": "regtest",
     "instructions": [
         {
             "type": "transaction",
-            "gasPrice": "0x09184e72a000",
-            "gasLimit": "0x5958",
-            "to": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
-            "value": "0x00",
-            "chainId": 1,
-            "data": "0x095ea7b3000000000000000000000000d8fd14fb0e0848cb931c1e54a73486c4b968be3d0000000000000000000000000000000000000000000000000000000000000064"
+            "value": 3836000000000000,
+            "to": "0x37d7B3bBD88EFdE6a93cF74D2F5b0385D3E3B08A",
+            "data": "0xb6b4af05000000000000000000000000000000000000000000000000000da0d2595bc000000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b55554827c63ba4a65dfaf06093315d08f3240fdd0724409e09ea250226f656964dcb44d17a565f7590c67cdb3241eb969f1c24db402ef5714e822a574afa8b6802a2a4ca000000000000000000000000000000000000000000000000000000000000001c456e391b0b2ef6d8d130fdff97085189eecc10f3f78f2b5cdaed24609ca89fd42aafed00dccb025ba383d4afecbf136b6a2e480620bb2c30f8d5a3e71d7f88090000000000000000000000000000000000000000000000000000000000000000",
+            "gasPrice": 100000000000
         }
     ]
 }
@@ -157,31 +201,28 @@ A GET request should be made to the payment protocol url with ?chain=chain&curre
 #### ETH - GUSD Response
 ```
 {
+    "time": "2019-06-13T18:31:47.350Z",
+    "expires": "2019-06-13T18:46:47.350Z",
+    "memo": "Payment request for BitPay invoice U6V72eVXTBsF5VQbTxVamu for merchant Micah's Cool Store",
+    "paymentUrl": "https://mriggan.bp:8088/i/U6V72eVXTBsF5VQbTxVamu",
+    "paymentId": "U6V72eVXTBsF5VQbTxVamu",
     "chain": "ETH",
+    "network": "regtest",
     "currency": "GUSD",
-    "time": "2018-01-12T22:04:54.364Z",
-    "expires": "2018-01-12T22:19:54.364Z",
-    "memo": "Payment request for BitPay invoice TmyrxFvAi4DjFNy3c7EjVm for merchant Robs Fake Business",
-    "paymentUrl": "https://localhost:5555/i/TmyrxFvAi4DjFNy3c7EjVm",
-    "paymentId": "TmyrxFvAi4DjFNy3c7EjVm",
     "instructions": [
         {
             "type": "transaction",
-            "gasPrice": "0x09184e72a000",
-            "gasLimit": "0x5958",
-            "to": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
-            "value": "0x00",
-            "chainId": 1,
-            "data": "0x095ea7b3000000000000000000000000d8fd14fb0e0848cb931c1e54a73486c4b968be3d0000000000000000000000000000000000000000000000000000000000000064"
+            "value": 0,
+            "to": "0xFEb423814D0208e9e2a3F5B0F0171e97376E20Bc",
+            "data": "0x095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a0000000000000000000000000000000000000000000000000000000000000064",
+            "gasPrice": 100000000000
         },
         {
             "type": "transaction",
-            "gasPrice": "0x09184e72a000",
-            "gasLimit": "0x5958",
-            "to": "0x2E05e01f8A9dF371FCdD8342D3834a57267a0cD1",
-            "value": "0x00",
-            "chainId": 1,
-            "data": "0xa9059cbb0000000000000000000000002e05e01f8a9df371fcdd8342d3834a57267a0cd10000000000000000000000000000000000000000000000000000000000000064"
+            "value": 0,
+            "to": "0x37d7B3bBD88EFdE6a93cF74D2F5b0385D3E3B08A",
+            "data": "0xb6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b5554293eea9865f7c52cfb4af7b4aa755d2d339ae61a2c2713fcc467e6f4dcd5149114d627c1ade24c1c22b4e4b87de860524acb1696dfacb31e5fd299e98e3ec9b692d8000000000000000000000000000000000000000000000000000000000000001bf0aa17a43365bc04a43b166f642aaf8e99f59972e52de08ad25e54ac5f57110571378ecd381ff0275ac73f2030fe6f93a330a2d6860d433707ca95ae2f1dd1c8000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc",
+            "gasPrice": 100000000000
         }
     ]
 }
@@ -205,125 +246,96 @@ On a successful request, the response will contain the following headers.
 * `currency` - Optional, Three letter code for the token these instructions are valid for
 * `instructions` - An array of instructions that can be used to construct transactions that will fufill this payment
 
-## Payment Verification Payload
+## Payment Verification 
 Our next step is to generate a funded transaction and send the unsigned version as well as the weighted size to the server, to make sure the
 payment is valid and will be accepted.
 
 ### Request
-A POST request should be made to the i/:invoiceid/verify payment protocol url. A JSON format body should be included with the following fields:
+A POST request should be made to the i/:invoiceid payment protocol url. A JSON format body should be included with the following fields:
+
+#### Headers
+* `Content-Type` = `application/payment-verification`.
+* `x-paypro-version` = 2
+
 
 ```JSON
 {
   "chain": "<chain 3 letter code>",
-  "unsignedTransactions": "<array of unsigned transactions in hexedecimal string format>",
+  "transactions": "<{tx: string, weightedSize?: number}>",
   "currency": "<optional (ERC20) 3 letter code>",
-  "weightedSizes": "<optional (BTC/BCH) array signed transaction weighted size in bytes>"
 }
 ```
 
-#### Example BTC/BCH Body
+#### Example ETH - GUSD Body
 ```JSON
 {
-  "chain": "BTC",
-  "unsignedTransactions": [
-     "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"
-  ],
-  "weightedSizes": [225]
+    "chain": "ETH",
+    "currency": "GUSD",
+    "transactions": [
+        {
+            "tx": "0xf8aa3c85174876e800830493e094feb423814d0208e9e2a3f5b0f0171e97376e20bc80b844095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a00000000000000000000000000000000000000000000000000000000000000641ca01c389df7ea8e3bfb2b2d5f18677cf06924796ad051185032970e7905cd212998a01244f5b7bd0ed69eb79c78f67cb9be3b3f976d7546dd0fa172fa3a31a2a12a3a"
+        },
+        {
+            "tx": "0xf9018b3d85174876e800830493e09437d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a80b90124b6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b5589330e6aafc7133617b0a196c9a74c030d8a6b0582313f87f551eece47c62c8f12fb097a8f09c5964f8875471d788b6543bc98bbfe1601de04279d67b05bb172a2870d000000000000000000000000000000000000000000000000000000000000001b2f6df07a001e20d8fddd8ff7941540afe9d414bff0122664d769901ab5f496c15b7ad8c6092c7fba6877ffd1c37167c66494f5e6995e4431bebf1d8608ee8ab5000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc1ba06caeb6eec8aa7abbf761e755233f6cefb5d92d05107b00cc3e7799e449088003a046a6f3d863b81faa7a82a8c67b433ef449346745038443bfd6015b617ea3a58e"
+        }
+        
+    ]
 }
 ```
 
-#### Example ETH Request Body
-```JSON
+#### Example ETH - GUSD Response
+```
 {
-  "chain": "ETH",
-  "unsignedTransactions": [
-     "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"
-  ]
+    "payment": {
+        "currency": "GUSD",
+        "chain": "ETH",
+        "transactions": [
+            {
+                "tx": "0xf8aa3c85174876e800830493e094feb423814d0208e9e2a3f5b0f0171e97376e20bc80b844095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a00000000000000000000000000000000000000000000000000000000000000641ca01c389df7ea8e3bfb2b2d5f18677cf06924796ad051185032970e7905cd212998a01244f5b7bd0ed69eb79c78f67cb9be3b3f976d7546dd0fa172fa3a31a2a12a3a"
+            },
+            {
+                "tx": "0xf9018b3d85174876e800830493e09437d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a80b90124b6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b5589330e6aafc7133617b0a196c9a74c030d8a6b0582313f87f551eece47c62c8f12fb097a8f09c5964f8875471d788b6543bc98bbfe1601de04279d67b05bb172a2870d000000000000000000000000000000000000000000000000000000000000001b2f6df07a001e20d8fddd8ff7941540afe9d414bff0122664d769901ab5f496c15b7ad8c6092c7fba6877ffd1c37167c66494f5e6995e4431bebf1d8608ee8ab5000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc1ba06caeb6eec8aa7abbf761e755233f6cefb5d92d05107b00cc3e7799e449088003a046a6f3d863b81faa7a82a8c67b433ef449346745038443bfd6015b617ea3a58e"
+            }
+        ]
+    },
+    "memo": "Payment appears valid"
 }
 ```
 
 
-#### Example ETH-GUSD Request Body
-```JSON
-{
-   "chain":"ETH",
-   "currency": "GUSD",
-   "unsignedTransactions":[
-         "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000",
-          "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"
-      ]
-}
-```
-
-### Curl Example
-```
-curl -v -d '{"chain": "BTC", "unsignedTransactions": ["0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"], "weightedSizes":[225]}' https://test.bitpay.com/i/YFujEPNdx8WGEUsysjdLfa/verify 
-*   Trying 127.0.0.1...
-* TCP_NODELAY set
-* Connected to test.bitpay.com (127.0.0.1) port 443 (#0)
-> POST /i/YFujEPNdx8WGEUsysjdLfa HTTP/1.1
-> Host: test.bitpay.com
-> User-Agent: curl/7.58.0
-> Accept: */*
-> Content-Type: application/verify-payment
-> Content-Length: 304
-> 
-* upload completely sent off: 304 out of 304 bytes
-< HTTP/1.1 200 OK
-< Strict-Transport-Security: max-age=31536000
-< Content-Length: 343
-< Date: Thu, 31 Jan 2019 21:51:31 GMT
-< Connection: keep-alive
-< 
-* Connection #0 to host test.bitpay.com left intact
-{"payment":{"currency":"BTC","unsignedTransactions":["0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"],"weightedSizes":[225]},"memo":"Payment appears valid"}% 
-```
-
-## Payment Payload
+## Payment Request 
 Now that the server has told us our payment is acceptable, we can send the fully signed transaction.
 
 ### Request
-A POST request should be made to /i/:invoice/pay . A JSON format body should be included with the following fields:
+A POST request should be made to /i/:invoiceid 
+
+#### Headers
+* `Content-Type` = `application/payment-verification`.
+* `x-paypro-version` = 2
 
 ```JSON
 {
   "chain": "<chain 3 letter code>",
-  "currency": "<optional token 3 letter code>",
-  "transactions": [
-    "<transaction in hexedecimal string format>"
-  ]
+  "transactions": "<{tx: string, weightedSize?: number}>",
+  "currency": "<optional (ERC20) 3 letter code>",
 }
 ```
 
-#### Example BTC/BCH Request Body
-```JSON
-{
-  "chain": "BTC",
-  "transactions": [
-    "02000000011f0f762184cbc8e94b307fab6f805168724f123a23cd48aac4a9bac8768cfd67000000004847304402205079b96def679f04de9698dd8b9f58dff3e4a13c075f5939c6edfbb8698c8cc802203eac5a3d6410a9f94a86828a4e207f8083fe0bf1c77a74a0cb7add49100d427001ffffffff0284990000000000001976a9149097a519e42061e4977b07b69735ed842b755c0088ac08cd042a010000001976a914cf4b90bca14deab1315c125b8b74b7d31eea97b288ac00000000"
-  ]
-}
-```
 
-#### Example ETH Request Body
+#### Example ETH - GUSD Request Body
 ```JSON
 {
-  "chain": "BTC",
-  "transactions": [
-    "02000000011f0f762184cbc8e94b307fab6f805168724f123a23cd48aac4a9bac8768cfd67000000004847304402205079b96def679f04de9698dd8b9f58dff3e4a13c075f5939c6edfbb8698c8cc802203eac5a3d6410a9f94a86828a4e207f8083fe0bf1c77a74a0cb7add49100d427001ffffffff0284990000000000001976a9149097a519e42061e4977b07b69735ed842b755c0088ac08cd042a010000001976a914cf4b90bca14deab1315c125b8b74b7d31eea97b288ac00000000"
-  ]
-}
-```
-
-#### Example ETH-GUSD Request Body
-```JSON
-{
-   "chain":"ETH",
-   "currency": "GUSD",
-   "transactions":[
-         "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000",
-          "0200000001919572700aef4a9b66ac2389ea8e8899b1c2c0b3ffe03c12c2d28e7a2574d3540100000000feffffff02c80f5f91000000001976a9140cd9a12aa54ad7b098988c67692a62196c1dbdc988ac98470200000000001976a9140f8cf402ad6478377750d572089d1e1a3ca099a788ac00000000"
-      ]
+    "chain": "ETH",
+    "currency": "GUSD",
+    "transactions": [
+        {
+            "tx": "0xf8aa3c85174876e800830493e094feb423814d0208e9e2a3f5b0f0171e97376e20bc80b844095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a00000000000000000000000000000000000000000000000000000000000000641ca01c389df7ea8e3bfb2b2d5f18677cf06924796ad051185032970e7905cd212998a01244f5b7bd0ed69eb79c78f67cb9be3b3f976d7546dd0fa172fa3a31a2a12a3a"
+        },
+        {
+            "tx": "0xf9018b3d85174876e800830493e09437d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a80b90124b6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b55a4b42732524f761ed693a9be3b8410aa0a15207c32490f8a46cb0dff405a292529d435d26be7a653ff1c90c7b67a8472506d2bb71e167096f90a1c6f125a25f156dc28000000000000000000000000000000000000000000000000000000000000001bbba3e08a7eb0f11c89ef605655095854f2043e8530072884d678d49ec513fb385bc35d61b78124add7615bde2c2858179ef2e092c9c9d42164055ea853e72926000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc1ba083ac15f2263f0120768fcf9693b8fedb041f7157594fdef379f18435917ba334a04384d86b055a97d55555ef6653c41b03609d6f16a9f82abceae4fdb54bdcb35c"
+        }
+        
+    ]
 }
 ```
 
@@ -333,37 +345,18 @@ The response will be a JSON format payload containing the original payment body 
 #### Response Example
 ```JSON
 {
-  "payment": {
-    "transactions": [
-      "020000000121053733b28b90707a3c63a48171f71abfdc7288bf9d78170e73cfedbbbdfcea00000000484730440220545d53b54873a5afbaf01a77943828f25c6a28d9c5ca4d0968130b5788fc6f9302203e45125723844e4752202792b764b6538342ad169d3828dad18eb231ea01f05101ffffffff02b09a0000000000001976a9149659267896dda4e5aef150e4ca83f0d76022c7b288ac84dd042a010000001976a914fa1a5ed99ce09fd901e9ca7d6f8fcc56d3d5eccf88ac00000000"
-    ]
-  },
-  "memo": "Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."
+    "payment": {
+        "transactions": [
+            {
+                "tx": "0xf8aa3c85174876e800830493e094feb423814d0208e9e2a3f5b0f0171e97376e20bc80b844095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a00000000000000000000000000000000000000000000000000000000000000641ca01c389df7ea8e3bfb2b2d5f18677cf06924796ad051185032970e7905cd212998a01244f5b7bd0ed69eb79c78f67cb9be3b3f976d7546dd0fa172fa3a31a2a12a3a"
+            },
+            {
+                "tx": "0xf9018b3d85174876e800830493e09437d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a80b90124b6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b55a4b42732524f761ed693a9be3b8410aa0a15207c32490f8a46cb0dff405a292529d435d26be7a653ff1c90c7b67a8472506d2bb71e167096f90a1c6f125a25f156dc28000000000000000000000000000000000000000000000000000000000000001bbba3e08a7eb0f11c89ef605655095854f2043e8530072884d678d49ec513fb385bc35d61b78124add7615bde2c2858179ef2e092c9c9d42164055ea853e72926000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc1ba083ac15f2263f0120768fcf9693b8fedb041f7157594fdef379f18435917ba334a04384d86b055a97d55555ef6653c41b03609d6f16a9f82abceae4fdb54bdcb35c"
+            }
+        ]
+    },
+    "memo": "Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."
 }
-```
-
-### Curl Example
-```
-curl -v -d '{"currency": "BTC", "transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]}' https://test.bitpay.com/i/7QBCJ2TpazTKKnczzJQJMc/pay
-*   Trying 127.0.0.1...
-* TCP_NODELAY set
-* Connected to test.bitpay.com (127.0.0.1) port 443 (#0)
-* TLS 1.2 connection using TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-> POST /i/7QBCJ2TpazTKKnczzJQJMc HTTP/1.1
-> Host: test.bitpay.com
-> User-Agent: curl/7.54.0
-> Accept: */*
-> Content-Type: application/payment-ack
-> Content-Length: 403
->
-* upload completely sent off: 403 out of 403 bytes
-< HTTP/1.1 200 OK
-< Content-Length: 520
-< Date: Fri, 12 Jan 2018 22:44:13 GMT
-< Connection: keep-alive
-<
-* Connection #0 to host test.bitpay.com left intact
-{"payment":{"transactions":["02000000012319227d3995427b05429df7ea30b87cb62f986ba3003311a2cf2177fb5b0ae8000000004847304402205bd75d6b654a70dcc8f548b630c39aec1d2c1de6900b5376ef607efc705f65b002202dd1036f091d4d6047e2f5bcd230ec8bcd5ad2f0785908d78f08a52b8850559f01ffffffff02b09a0000000000001976a9140b2a833c4183c51b86f5dcbb2eeeaca2dfb44bae88acdccb042a010000001976a914f0fd63e5880cbed2fa856e1f4174fc875eeccc5a88ac00000000"]},"memo":"Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."}%
 ```
 
 ## Signatures
@@ -562,7 +555,7 @@ Another issue you may see is that you are being redirected to `bitpay.com/invoic
 
 |Mime|Description|
 |---|---|
+|application/payment-options| Retrieve the options that the invoice can be paid with, this is specified with the `Accept` header.|
 |application/payment-request| Associated with the server's payment request, this specified on the client `Accept` header when retrieving the payment request|
-|application/verify-payment| Used by the client when sending their proposed unsigned payment transaction payload|
+|application/payment-verification| Used by the client when sending their proposed unsigned payment transaction payload|
 |application/payment| Used by the client when sending their proposed payment transaction payload|
-|application/payment-ack| Used by the server to state acceptance of the client's proposed payment transaction|
