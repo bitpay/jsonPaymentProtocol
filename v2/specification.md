@@ -323,7 +323,7 @@ A POST request should be made to the payment protocol url with `{chain, transact
  * /i/:someinvoiceid
 
 #### Headers
-* `Content-Type` = `application/payment-verification`.
+* `Content-Type` = `application/payment
 * `x-paypro-version` = 2
 
 ```JSON
