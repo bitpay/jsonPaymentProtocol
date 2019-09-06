@@ -1,172 +1,265 @@
 'use strict';
-//Native
+
+// Native
 const crypto = require('crypto');
+const https = require('https');
 const query = require('querystring');
 const url = require('url');
-const util = require('util');
 
-//Modules
-const _ = require('lodash');
-const request = require('request');
+// Modules
 const secp256k1 = require('secp256k1');
 
-function PaymentProtocol(options) {
-  this.options = _.merge({
-    strictSSL: true
-  }, options);
+function PaymentProtocol(requestOptions, trustedKeys) {
+  this.options = Object.assign({}, { agent: false }, requestOptions);
+  this.trustedKeys = trustedKeys;
+  if (!this.trustedKeys || !Object.keys(this.trustedKeys).length) {
+    throw new Error('Invalid constructor, no trusted keys added to agent');
+  }
 }
 
 /**
- * Makes a request to the given url and returns the raw JSON string retrieved as well as the headers
- * @param paymentUrl {string} the payment protocol specific url
- * @param callback {function} (err, body, headers)
+ * Internal method for making requests asynchronously
+ * @param {Object} options
+ * @return {Promise<Object{rawBody: String, headers: Object}>}
+ * @private
  */
-PaymentProtocol.prototype.getRawPaymentRequest = function getRawPaymentRequest(paymentUrl, callback) {
-  let paymentUrlObject = url.parse(paymentUrl);
+PaymentProtocol.prototype._asyncRequest = async function(options) {
+  let requestOptions = Object.assign({}, this.options, options);
+  const parsedUrl = url.parse(requestOptions.url);
 
-  //Detect 'bitcoin:' urls and extract payment-protocol section
+  // Copy headers directly as they're objects
+  requestOptions.headers = Object.assign({}, this.options.headers, options.headers);
+
+  requestOptions.hostname = parsedUrl.hostname;
+  requestOptions.path = parsedUrl.path;
+  requestOptions.port = parsedUrl.port;
+  delete requestOptions.url;
+
+  return new Promise((resolve, reject) => {
+    const request = https.request(requestOptions, (response) => {
+      const body = [];
+      response.on('data', chunk => body.push(chunk));
+      response.on('end', () => {
+        if (response.statusCode !== 200) {
+          console.log('Status', response.statusCode);
+          return reject(new Error(body.join('')));
+        }
+        resolve({
+          rawBody: body.join(''),
+          headers: response.headers
+        });
+      });
+    });
+    request.on('error', reject);
+    if (requestOptions.body) {
+      request.write(requestOptions.body);
+    }
+    request.end();
+  });
+};
+
+/**
+ * Makes a request to the given url and returns the raw JSON string retrieved as well as the headers
+ * @param {string} paymentUrl the payment protocol specific url
+ * @param {boolean} unsafeBypassValidation bypasses signature verification on the request (DO NOT USE IN PRODUCTION)
+ */
+PaymentProtocol.prototype.getPaymentOptions = async function(paymentUrl, unsafeBypassValidation = false) {
+  const paymentUrlObject = url.parse(paymentUrl);
+
+  // Detect 'bitcoin:' urls and extract payment-protocol section
   if (paymentUrlObject.protocol !== 'http:' && paymentUrlObject.protocol !== 'https:') {
     let uriQuery = query.decode(paymentUrlObject.query);
     if (!uriQuery.r) {
-      return callback(new Error('Invalid payment protocol url'));
-    }
-    else {
+      throw new Error('Invalid payment protocol url');
+    } else {
       paymentUrl = uriQuery.r;
     }
   }
 
-  let requestOptions = _.merge(this.options, {
+  const { rawBody, headers } = await this._asyncRequest({
+    method: 'GET',
     url: paymentUrl,
     headers: {
-      'Accept': 'application/payment-request'
+      Accept: 'application/payment-options',
+      'x-paypro-version': 2
     }
   });
 
-  request.get(requestOptions, (err, response) => {
-    if (err) {
-      return callback(err);
-    }
-    if (response.statusCode !== 200) {
-      return callback(new Error(response.body.toString()));
-    }
-
-    return callback(null, {rawBody: response.body, headers: response.headers, requestUrl: paymentUrl});
-  });
+  return await this.verifyResponse(paymentUrl, rawBody, headers, unsafeBypassValidation);
 };
 
 /**
- * Makes a request to the given url and returns the raw JSON string retrieved as well as the headers
- * @param url {string} the payment protocol specific url (https)
+ * Selects which chain and currency option the user will be using for payment
+ * @param {string} paymentUrl the payment protocol specific url
+ * @param chain
+ * @param currency
+ * @param unsafeBypassValidation
+ * @return {Promise<{requestUrl, responseData}|{keyData, requestUrl, responseData}>}
  */
-PaymentProtocol.prototype.getRawPaymentRequestAsync = util.promisify(PaymentProtocol.prototype.getRawPaymentRequest);
+PaymentProtocol.prototype.selectPaymentOption = async function(paymentUrl, chain, currency, unsafeBypassValidation = false) {
+  const { rawBody, headers } = await this._asyncRequest({
+    url: paymentUrl,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/payment-request',
+      'x-paypro-version': 2
+    },
+    body: JSON.stringify({
+      chain,
+      currency
+    })
+  });
+
+  return await this.verifyResponse(paymentUrl, rawBody, headers, unsafeBypassValidation);
+};
 
 /**
- * Given a raw payment protocol body, parses it and validates it against the digest header
- * @param rawBody {string} Raw JSON string retrieved from the payment protocol server
- * @param headers {object} Headers sent by the payment protocol server
- * @param callback {function} (err, paymentRequest)
+ * Sends an unsigned raw transaction to the server for verification of outputs and fee amount
+ * @param {string} paymentUrl - the payment protocol specific url
+ * @param {string} chain - The cryptocurrency chain of the payment (BTC, BCH, ETH, etc)
+ * @param {string} currency - When spending a token on top of a chain, such as GUSD on ETH this would be GUSD,
+ * if no token is used this should be blank
+ * @param [{tx: string, weightedSize: number}] unsignedTransactions - Hexadecimal format unsigned transactions
+ * @param {boolean} unsafeBypassValidation
+ * @return {Promise<{responseData: any}>}
  */
-PaymentProtocol.prototype.parsePaymentRequest = function parsePaymentRequest(rawBody, headers, callback) {
-  let paymentRequest;
+PaymentProtocol.prototype.verifyUnsignedPayment = async function({
+  paymentUrl,
+  chain,
+  currency,
+  unsignedTransactions,
+  unsafeBypassValidation = false
+}) {
+  const { rawBody, headers } = await this._asyncRequest({
+    url: paymentUrl,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/payment-verification',
+      'x-paypro-version': 2
+    },
+    body: JSON.stringify({
+      chain,
+      currency,
+      transactions: unsignedTransactions
+    })
+  });
 
+  return await this.verifyResponse(paymentUrl, rawBody, headers, unsafeBypassValidation);
+};
+
+/**
+ * Sends a signed transaction as the final step for payment
+ * @param {string} paymentUrl the payment protocol specific url
+ * @param {string} chain
+ * @param {string} currency
+ * @param {[string]} signedTransactions
+ * @param {number} weightedSize
+ * @param {boolean} unsafeBypassValidation
+ * @return {Promise<{keyData: Object, requestUrl: String, responseData: Object}|{requestUrl: String, responseData: Object}>}
+ */
+PaymentProtocol.prototype.sendSignedPayment = async function({
+  paymentUrl,
+  chain,
+  currency,
+  signedTransactions,
+  unsafeBypassValidation = false
+}) {
+  const { rawBody, headers } = await this._asyncRequest({
+    url: paymentUrl,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/payment',
+      'x-paypro-version': 2
+    },
+    body: JSON.stringify({
+      chain,
+      currency,
+      transactions: signedTransactions
+    })
+  });
+
+  return await this.verifyResponse(paymentUrl, rawBody, headers, unsafeBypassValidation);
+};
+
+/**
+ * Verifies the signature on any response from the payment requestor
+ * @param {String} requestUrl - Url which the request was made to
+ * @param {String} rawBody - The raw string body of the response
+ * @param {Object} headers -
+ * @param {Boolean} unsafeBypassValidation
+ * @return {Promise<{keyData: Object, requestUrl: String, responseData: Object}|{requestUrl: String, responseData: Object}>}
+ */
+PaymentProtocol.prototype.verifyResponse = async function(requestUrl, rawBody, headers, unsafeBypassValidation) {
+  if (!requestUrl) {
+    throw new Error('Parameter requestUrl is required');
+  }
   if (!rawBody) {
-    return callback(new Error('Parameter rawBody is required'));
+    throw new Error('Parameter rawBody is required');
   }
   if (!headers) {
-    return callback(new Error('Parameter headers is required'));
+    throw new Error('Parameter headers is required');
   }
 
+  let responseData;
   try {
-    paymentRequest = JSON.parse(rawBody);
-  }
-  catch (e) {
-    return callback(new Error(`Unable to parse request - ${e}`));
-  }
-
-  if (!headers.digest) {
-    return callback(new Error('Digest missing from response headers'));
+    responseData = JSON.parse(rawBody);
+  } catch (e) {
+    throw new Error('Invalid JSON in response body');
   }
 
-  let digest = headers.digest.split('=')[1];
-  let hash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
-
-  if (digest !== hash) {
-    return callback(new Error(`Response body hash does not match digest header. Actual: ${hash} Expected: ${digest}`));
+  if (unsafeBypassValidation) {
+    return { requestUrl, responseData };
   }
 
-  paymentRequest.hash = hash;
-  paymentRequest.headers = headers;
-
-  return callback(null, paymentRequest);
-};
-
-/**
- * Given a raw payment protocol body, parses it and validates it against the digest header
- * @param rawBody {string} Raw JSON string retrieved from the payment protocol server
- * @param headers {object} Headers sent by the payment protocol server
- */
-PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProtocol.prototype.parsePaymentRequest);
-
-/**
- * Verifies the signature of a given payment request is both valid and from a trusted key
- * @param requestUrl {String} The url used to fetch this payment request
- * @param paymentRequest {Object} The payment request object returned by parsePaymentRequest
- * @param trustedKeys {Object} An object containing all keys trusted by this client
- * @param callback {function} If no error is returned callback will contain the owner of the key which signed this request (ie BitPay Inc.)
- */
-PaymentProtocol.prototype.verifyPaymentRequest = function verifyPaymentRequest(requestUrl, paymentRequest, trustedKeys, callback) {
-  let hash = paymentRequest.headers.digest.split('=')[1];
-  let signature = paymentRequest.headers.signature;
-  let signatureType = paymentRequest.headers['x-signature-type'];
-  let identity = paymentRequest.headers['x-identity'];
+  const hash = headers.digest.split('=')[1];
+  const signature = headers.signature;
+  const signatureType = headers['x-signature-type'];
+  const identity = headers['x-identity'];
   let host;
-
-  if (!requestUrl) {
-    return callback(new Error('You must provide the original payment request url'));
-  }
-  if (!trustedKeys) {
-    return callback(new Error('You must provide a set of trusted keys'))
-  }
 
   try {
     host = url.parse(requestUrl).hostname;
+  } catch (e) {
   }
-  catch(e) {}
 
   if (!host) {
-    return callback(new Error('Invalid requestUrl'));
+    throw new Error('Invalid requestUrl');
   }
   if (!signatureType) {
-    return callback(new Error('Response missing x-signature-type header'));
+    throw new Error('Response missing x-signature-type header');
   }
   if (typeof signatureType !== 'string') {
-    return callback(new Error('Invalid x-signature-type header'));
+    throw new Error('Invalid x-signature-type header');
   }
   if (signatureType !== 'ecc') {
-    return callback(new Error(`Unknown signature type ${signatureType}`))
+    throw new Error(`Unknown signature type ${signatureType}`);
   }
   if (!signature) {
-    return callback(new Error('Response missing signature header'));
+    throw new Error('Response missing signature header');
   }
   if (typeof signature !== 'string') {
-    return callback(new Error('Invalid signature header'));
+    throw new Error('Invalid signature header');
   }
   if (!identity) {
-    return callback(new Error('Response missing x-identity header'));
+    throw new Error('Response missing x-identity header');
   }
   if (typeof identity !== 'string') {
-    return callback(new Error('Invalid identity header'));
+    throw new Error('Invalid identity header');
   }
 
-  if (!trustedKeys[identity]) {
-    return callback(new Error(`Response signed by unknown key (${identity}), unable to validate`));
+  if (!this.trustedKeys[identity]) {
+    throw new Error(`Response signed by unknown key (${identity}), unable to validate`);
   }
 
-  let keyData = trustedKeys[identity];
-  if (keyData.domains.indexOf(host) === -1) {
-    return callback(new Error(`The key on the response (${identity}) is not trusted for domain ${host}`));
-  } else if (!keyData.networks.includes(paymentRequest.network)) {
-    return callback(new Error(`The key on the response is not trusted for transactions on the '${paymentRequest.network}' network`));
+  const keyData = this.trustedKeys[identity];
+  const actualHash = crypto.createHash('sha256').update(rawBody, 'utf8').digest('hex');
+
+  if (hash !== actualHash) {
+    throw new Error(`Response body hash does not match digest header. Actual: ${actualHash} Expected: ${hash}`);
+  }
+
+  if (!keyData.domains.includes(host)) {
+    throw new Error(`The key on the response (${identity}) is not trusted for domain ${host}`);
   }
 
   let valid = secp256k1.verify(
@@ -176,139 +269,10 @@ PaymentProtocol.prototype.verifyPaymentRequest = function verifyPaymentRequest(r
   );
 
   if (!valid) {
-    return callback(new Error('Response signature invalid'));
+    throw new Error('Response signature invalid');
   }
 
-  return callback(null, keyData.owner);
+  return { requestUrl, responseData, keyData };
 };
-
-/**
- * Verifies the signature of a given payment request is both valid and from a trusted key
- * @param requestUrl {String} The url used to fetch this payment request
- * @param paymentRequest {Object} The payment request object returned by parsePaymentRequest
- * @param trustedKeys {Object} An object containing all keys trusted by this client
- * @returns {String} The owner of the key which signed this request (ie BitPay Inc.) which should be displayed to the user
- */
-PaymentProtocol.prototype.parsePaymentRequestAsync = util.promisify(PaymentProtocol.prototype.parsePaymentRequest);
-
-
-/**
- * Sends a given payment to the server for validation
- * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
- * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
- * @param weightedSize {number} Weighted size of the transaction in bytes
- * @param url {string} the payment protocol specific url (https)
- * @param callback {function} (err, response)
- */
-PaymentProtocol.prototype.sendPaymentForVerification = function sendPayment(currency, unsignedRawTransaction, weightedSize, url, callback) {
-  let paymentResponse;
-
-  //Basic sanity checks
-  if (typeof unsignedRawTransaction !== 'string') {
-    return callback(new Error('unsignedRawTransaction must be a string'));
-  }
-  if (!/^[0-9a-f]+$/i.test(unsignedRawTransaction)) {
-    return callback(new Error('unsignedRawTransaction must be in hexadecimal format'));
-  }
-  if (typeof weightedSize !== 'number' || parseInt(weightedSize) !== weightedSize) {
-    return callback(new Error('weightedSize must be an integer'));
-  }
-
-  let requestOptions = _.merge(this.options, {
-    url: url,
-    headers: {
-      'Content-Type': 'application/verify-payment'
-    },
-    body: JSON.stringify({
-      currency: currency,
-      unsignedTransaction: unsignedRawTransaction,
-      weightedSize: weightedSize
-    })
-  });
-
-  request.post(requestOptions, (err, response) => {
-    if (err) {
-      return callback(err);
-    }
-    if (response.statusCode !== 200) {
-      return callback(new Error(response.body.toString()));
-    }
-
-    try {
-      paymentResponse = JSON.parse(response.body);
-    }
-    catch (e) {
-      return callback(new Error('Unable to parse response from server'));
-    }
-
-    callback(null, paymentResponse);
-  });
-};
-
-/**
- * Sends a given payment to the server for validation
- * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
- * @param unsignedRawTransaction {string} Hexadecimal format raw unsigned transaction
- * @param weightedSize {number} Weighted size of the transaction in bytes
- * @param url {string} the payment protocol specific url (https)
- */
-PaymentProtocol.prototype.sendPaymentForVerificationAsync = util.promisify(PaymentProtocol.prototype.sendPaymentForVerification);
-
-/**
- * Sends actual payment to server
- * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
- * @param signedRawTransaction {string} Hexadecimal format raw signed transaction
- * @param url {string} the payment protocol specific url (https)
- * @param callback {function} (err, response)
- */
-PaymentProtocol.prototype.sendSignedPayment = function sendSignedPayment(currency, signedRawTransaction, url, callback) {
-  let paymentResponse;
-
-  //Basic sanity checks
-  if (typeof signedRawTransaction !== 'string') {
-    return callback(new Error('signedRawTransaction must be a string'));
-  }
-  if (!/^[0-9a-f]+$/i.test(signedRawTransaction)) {
-    return callback(new Error('signedRawTransaction must be in hexadecimal format'));
-  }
-
-  let requestOptions = _.merge(this.options, {
-    url: url,
-    headers: {
-      'Content-Type': 'application/payment'
-    },
-    body: JSON.stringify({
-      currency: currency,
-      transactions: [signedRawTransaction]
-    })
-  });
-
-  request.post(requestOptions, (err, response) => {
-    if (err) {
-      return callback(err);
-    }
-    if (response.statusCode !== 200) {
-      return callback(new Error(response.body.toString()));
-    }
-
-    try {
-      paymentResponse = JSON.parse(response.body);
-    }
-    catch (e) {
-      return callback(new Error('Unable to parse response from server'));
-    }
-
-    callback(null, paymentResponse);
-  });
-};
-
-/**
- * Sends actual payment to server
- * @param currency {string} Three letter currency code of proposed transaction (ie BTC, BCH)
- * @param signedRawTransaction {string} Hexadecimal format raw signed transaction
- * @param url {string} the payment protocol specific url (https)
- */
-PaymentProtocol.prototype.sendSignedPaymentAsync = util.promisify(PaymentProtocol.prototype.sendSignedPayment);
 
 module.exports = PaymentProtocol;
-

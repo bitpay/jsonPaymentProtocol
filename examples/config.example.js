@@ -1,12 +1,20 @@
 module.exports = {
   network: 'test',
-  currency: 'BTC',
   rpcServer: {
-    // should set this to match your own bitcoin rpc settings
-    username: 'fakeUser',
-    password: 'fakePassword',
-    ipAddress: '127.0.0.1',
-    port: '18332'
+    BTC: {
+      // should set this to match your own bitcoin-core rpc settings
+      username: 'fakeUser',
+      password: 'fakePassword',
+      ipAddress: '127.0.0.1',
+      port: '18332'
+    },
+    BCH: {
+      // should set this to match your own bitcoin-abc rpc settings
+      username: 'fakeUser',
+      password: 'fakePassword',
+      ipAddress: '127.0.0.1',
+      port: '18332'
+    }
   },
   trustedKeys: {
     // The idea is that you or the wallet provider will populate this with keys that are trusted, we have provided a few possible approaches
@@ -16,8 +24,6 @@ module.exports = {
     'mh65MN7drqmwpCRZcEeBEE9ceQCQ95HtZc': {
       // This is displayed to the user, somewhat like the organization field on an SSL certificate
       owner: 'BitPay (TESTNET ONLY - DO NOT TRUST FOR ACTUAL BITCOIN)',
-      // Which bitcoin networks is this key valid for (regtest, test, main)
-      networks: ['test'],
       // Which domains this key is valid for
       domains: ['test.bitpay.com'],
       // The actual public key which should be used to validate the signatures
