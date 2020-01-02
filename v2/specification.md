@@ -28,7 +28,7 @@ Broadcasting a payment before getting a success notification back from the serve
 ### Request
 A GET request should be made to payment protcol url. 
 Example: 
- * /i/:someinvoiceid
+ * /i/someinvoiceid
 
 #### Headers
 * `Accept` = `application/payment-options`.
@@ -110,15 +110,19 @@ Each payment option includes
 ## Payment Request
 
 ### Request
-A POST request should be made to the payment protocol url with `{chain, currency}`
+A POST request should be made to the payment protocol url with a JSON dictionary containing `{chain, currency}` fields
 
 #### Examples: 
 
- * /i/:someinvoiceid
+ * /i/someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment-request`.
 * `x-paypro-version` = 2
+
+**Note: Do NOT use the standard `application/json` `Content-Type`**
+
+**Note: Do NOT include an `Accept` property**
 
 #### Request Body
 * `chain` = a chain that was present in the payment-options response
@@ -260,7 +264,7 @@ payment is valid and will be accepted.
 A POST request should be made to the payment protocol url.
 
 #### Examples: 
- * /i/:someinvoiceid
+ * /i/someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment-verification`.
@@ -275,6 +279,19 @@ A POST request should be made to the payment protocol url.
   "currency": "<optional (ERC20) 3 letter code>",
 }
 ```
+
+* *weightedSize* is the length of the signed transaction in bytes, or the transaction "weight" in the Bitcoin blockchain.
+* *tx* is the hex-encoded unsigned transaction.  In Bitcoin-family cryptocurrencies, "unsigned" means that the input script has length 0
+
+#### Success
+
+A 200 return code means that the transaction is valid.  Additional fields are available for display and analysis as described in the example section.
+
+#### Troubleshooting
+
+* 400
+  Read a detailed problem description from the http error stream
+
 
 #### Example ETH - GUSD Body
 ```JSON
@@ -320,7 +337,7 @@ Now that the server has told us our payment is acceptable, we can send the fully
 A POST request should be made to the payment protocol url with `{chain, transactions, currency}`
 
 #### Examples: 
- * /i/:someinvoiceid
+ * /i/someinvoiceid
 
 #### Headers
 * `Content-Type` = `application/payment
