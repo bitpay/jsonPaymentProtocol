@@ -120,8 +120,9 @@ A POST request should be made to the payment protocol url with a JSON dictionary
 * `Content-Type` = `application/payment-request`.
 * `x-paypro-version` = 2
 
-**Note: do NOT use the standard application/json `Content-Type`**
-**Note: do NOT include an "Accept" property**
+**Note: Do NOT use the standard `application/json` `Content-Type`**
+
+**Note: Do NOT include an `Accept` property**
 
 #### Request Body
 * `chain` = a chain that was present in the payment-options response
