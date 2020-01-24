@@ -40,53 +40,81 @@ A list of payment options will be returned.
 
 ```
 {
-    "time": "2019-06-13T18:07:33.495Z",
-    "expires": "2019-06-13T18:22:33.495Z",
-    "memo": "Payment request for BitPay invoice R4GvGy1ZbZhLWxcHq4u2hm for merchant Micah's Cool Store",
-    "paymentUrl": "https://mriggan.bp:8088/i/R4GvGy1ZbZhLWxcHq4u2hm",
-    "paymentId": "R4GvGy1ZbZhLWxcHq4u2hm",
+    "time": "2020-01-24T18:57:44.509Z",
+    "expires": "2020-01-24T19:12:44.509Z",
+    "memo": "Payment request for BitPay invoice AonN46AuFPYTC8PKG8cPPV for merchant BitPay Visa® Load (USD-USA)",
+    "paymentUrl": "https://bitpay.com/i/AonN46AuFPYTC8PKG8cPPV",
+    "paymentId": "AonN46AuFPYTC8PKG8cPPV",
     "paymentOptions": [
         {
             "chain": "BTC",
             "currency": "BTC",
-            "network": "regtest",
-            "estimatedAmount": 15100,
-            "decimals": 8
+            "network": "main",
+            "estimatedAmount": 13400,
+            "requiredFeeRate": 6.544,
+            "minerFee": 1600,
+            "decimals": 8,
+            "selected": false
         },
         {
             "chain": "BCH",
             "currency": "BCH",
-            "network": "regtest",
-            "estimatedAmount": 240800,
-            "decimals": 8
+            "network": "main",
+            "estimatedAmount": 315200,
+            "requiredFeeRate": 1,
+            "minerFee": 0,
+            "decimals": 8,
+            "selected": false
         },
         {
             "chain": "ETH",
             "currency": "ETH",
-            "network": "regtest",
-            "estimatedAmount": 3864000000000000,
-            "decimals": 18
+            "network": "main",
+            "estimatedAmount": 6195000000000000,
+            "requiredFeeRate": 13555555557,
+            "minerFee": 0,
+            "decimals": 18,
+            "selected": false
         },
         {
             "chain": "ETH",
             "currency": "GUSD",
-            "network": "regtest",
+            "network": "main",
             "estimatedAmount": 100,
-            "decimals": 2
-        },
-        {
-            "chain": "ETH",
-            "currency": "USDC",
-            "network": "regtest",
-            "estimatedAmount": 1000000,
-            "decimals": 6
+            "requiredFeeRate": 13555555557,
+            "minerFee": 0,
+            "decimals": 2,
+            "selected": false
         },
         {
             "chain": "ETH",
             "currency": "PAX",
-            "network": "regtest",
+            "network": "main",
             "estimatedAmount": 1000000000000000000,
-            "decimals": 18
+            "requiredFeeRate": 13555555557,
+            "minerFee": 0,
+            "decimals": 18,
+            "selected": false
+        },
+        {
+            "chain": "ETH",
+            "currency": "USDC",
+            "network": "main",
+            "estimatedAmount": 1000000,
+            "requiredFeeRate": 13555555557,
+            "minerFee": 0,
+            "decimals": 6,
+            "selected": false
+        },
+        {
+            "chain": "XRP",
+            "currency": "XRP",
+            "network": "main",
+            "estimatedAmount": 4494841,
+            "requiredFeeRate": 12,
+            "minerFee": 0,
+            "decimals": 6,
+            "selected": true
         }
     ]
 }
@@ -238,6 +266,32 @@ A POST request should be made to the payment protocol url with a JSON dictionary
 }
 ```
 
+#### XRP Response
+```
+{
+    "time": "2020-01-24T18:57:44.509Z",
+    "expires": "2020-01-24T19:12:44.509Z",
+    "memo": "Payment request for BitPay invoice AonN46AuFPYTC8PKG8cPPV for merchant BitPay Visa® Load (USD-USA)",
+    "paymentUrl": "https://bitpay.com/i/AonN46AuFPYTC8PKG8cPPV",
+    "paymentId": "AonN46AuFPYTC8PKG8cPPV",
+    "chain": "XRP",
+    "network": "main",
+    "instructions": [
+        {
+            "type": "transaction",
+            "requiredFeeRate": 12,
+            "outputs": [
+                {
+                    "amount": 4494841,
+                    "invoiceID": "326661FF10DF1F00B10DD96D58B4D026FB32CBF2E8DF5D3E22716092AAD4F082",
+                    "address": "rKpTKoJSFbCoZkwydRv7NWTiBgNrdTXJ24"
+                }
+            ]
+        }
+    ]
+}
+```
+
 #### Headers
 On a successful request, the response will contain the following headers.
 
@@ -329,6 +383,35 @@ A 200 return code means that the transaction is valid.  Additional fields are av
 }
 ```
 
+#### Example XRP Body
+```
+{
+  "chain": "XRP",
+  "currency": "XRP",
+  "transactions": [
+    {
+      "tx": "120000228000000024000000095011F6751F266C7E664CB3CDAE77D091ED73E3D365591D8FA769BEA9F694C5C4A5DF614000000000448E1768400000000000000C81148FF291E50F16A206B96D383E1F86CC47E21727DA8314C5B8A782192BFF4D8FF629A88BEEB417A4D9EEB2"
+    }
+  ]
+}
+```
+
+#### Example XRP Response
+```
+{
+  "payment": {
+    "currency": "XRP",
+    "chain": "XRP",
+    "transactions": [
+      {
+        "tx": "120000228000000024000000095011F6751F266C7E664CB3CDAE77D091ED73E3D365591D8FA769BEA9F694C5C4A5DF614000000000448E1768400000000000000C81148FF291E50F16A206B96D383E1F86CC47E21727DA8314C5B8A782192BFF4D8FF629A88BEEB417A4D9EEB2"
+      }
+    ]
+  },
+  "memo": "Payment appears valid"
+}
+```
+
 
 ## Payment 
 Now that the server has told us our payment is acceptable, we can send the fully signed transaction.
@@ -369,10 +452,24 @@ A POST request should be made to the payment protocol url with `{chain, transact
 }
 ```
 
+
+#### Example XRP Request Body
+```
+{
+  "chain": "XRP",
+  "currency": "XRP",
+  "transactions": [
+    {
+      "tx": "120000228000000024000000095011F6751F266C7E664CB3CDAE77D091ED73E3D365591D8FA769BEA9F694C5C4A5DF614000000000448E1768400000000000000C7321030834A2B07BD552337FEA00C32E8DDDDB541BC7353DA7E982B4C191BFE432D3BE74473045022100A2D1E2A0B0E01EAAA36F67F650463391E4390F9F540D4C7553E1698F866A16E002201C5CB68137805ECC73F2D4459E7840842C255065A716475CDDFCA007EA570A1581148FF291E50F16A206B96D383E1F86CC47E21727DA8314C5B8A782192BFF4D8FF629A88BEEB417A4D9EEB2"
+    }
+  ]
+}
+```
+
 ### Response
 The response will be a JSON format payload containing the original payment body and a memo field which should be displayed to the user.
 
-#### Response Example
+#### ETH - GUSD Response Example
 ```JSON
 {
     "payment": {
@@ -386,6 +483,19 @@ The response will be a JSON format payload containing the original payment body 
         ]
     },
     "memo": "Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."
+}
+```
+#### XRP Response Example
+```
+{
+  "payment": {
+    "transactions": [
+      {
+        "tx": "120000228000000024000000095011F6751F266C7E664CB3CDAE77D091ED73E3D365591D8FA769BEA9F694C5C4A5DF614000000000448E1768400000000000000C7321030834A2B07BD552337FEA00C32E8DDDDB541BC7353DA7E982B4C191BFE432D3BE74473045022100A2D1E2A0B0E01EAAA36F67F650463391E4390F9F540D4C7553E1698F866A16E002201C5CB68137805ECC73F2D4459E7840842C255065A716475CDDFCA007EA570A1581148FF291E50F16A206B96D383E1F86CC47E21727DA8314C5B8A782192BFF4D8FF629A88BEEB417A4D9EEB2"
+      }
+    ]
+  },
+  "memo": "Transaction received by BitPay. Invoice will be marked as paid if the transaction is confirmed."
 }
 ```
 
