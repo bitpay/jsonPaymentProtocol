@@ -138,7 +138,8 @@ Each payment option includes
 ## Payment Request
 
 ### Request
-A POST request should be made to the payment protocol url with a JSON dictionary containing `{chain, currency}` fields
+A POST request should be made to the payment protocol url with a JSON dictionary containing 
+`{chain, currency, payload}` fields.
 
 #### Examples: 
 
@@ -155,11 +156,13 @@ A POST request should be made to the payment protocol url with a JSON dictionary
 #### Request Body
 * `chain` = a chain that was present in the payment-options response
 * `currency` = Optional, the particular currency on the chain you will pay with. Defaults to chain
+* `payload` = Optional, an object with additional parameters such as address used for bypassing the approval transaction by checking for allowance.
 
 ```JSON
 {
   "chain": "<chain 3 letter code>",
   "currency": "<optional (ERC20) 3 letter code>",
+  "payload": "<optional {address?: string} (ERC20) from address>"
 }
 ```
 
@@ -236,31 +239,31 @@ A POST request should be made to the payment protocol url with a JSON dictionary
 }
 ```
 
-#### ETH - GUSD Response
+#### ETH - PAX Response
 ```
 {
-    "time": "2019-06-13T18:31:47.350Z",
-    "expires": "2019-06-13T18:46:47.350Z",
-    "memo": "Payment request for BitPay invoice U6V72eVXTBsF5VQbTxVamu for merchant Micah's Cool Store",
-    "paymentUrl": "https://mriggan.bp:8088/i/U6V72eVXTBsF5VQbTxVamu",
-    "paymentId": "U6V72eVXTBsF5VQbTxVamu",
+    "time": "2020-08-26T16:48:10.352Z",
+    "expires": "2020-08-26T17:03:10.352Z",
+    "memo": "Payment request for BitPay invoice SZZ4fTVJAyDCgT2UNEMP9M for merchant Kook's Kookies",
+    "paymentUrl": "https://jkook.bp:8088/i/SZZ4fTVJAyDCgT2UNEMP9M",
+    "paymentId": "SZZ4fTVJAyDCgT2UNEMP9M",
     "chain": "ETH",
     "network": "regtest",
-    "currency": "GUSD",
+    "currency": "PAX",
     "instructions": [
         {
             "type": "transaction",
             "value": 0,
-            "to": "0xFEb423814D0208e9e2a3F5B0F0171e97376E20Bc",
-            "data": "0x095ea7b300000000000000000000000037d7b3bbd88efde6a93cf74d2f5b0385d3e3b08a0000000000000000000000000000000000000000000000000000000000000064",
-            "gasPrice": 100000000000
+            "to": "0x2A2F5FB038fA3005B19a9421C6D230018e25AcfD",
+            "data": "0x095ea7b3000000000000000000000000e968ce738c2c675227515e577332f02df420e913000000000000000000000000000000000000000000de03af956820a7fd280000",
+            "gasPrice": 20
         },
         {
             "type": "transaction",
             "value": 0,
-            "to": "0x37d7B3bBD88EFdE6a93cF74D2F5b0385D3E3B08A",
-            "data": "0xb6b4af050000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000174876e8000000000000000000000000000000000000000000000000000000016b5554293eea9865f7c52cfb4af7b4aa755d2d339ae61a2c2713fcc467e6f4dcd5149114d627c1ade24c1c22b4e4b87de860524acb1696dfacb31e5fd299e98e3ec9b692d8000000000000000000000000000000000000000000000000000000000000001bf0aa17a43365bc04a43b166f642aaf8e99f59972e52de08ad25e54ac5f57110571378ecd381ff0275ac73f2030fe6f93a330a2d6860d433707ca95ae2f1dd1c8000000000000000000000000feb423814d0208e9e2a3f5b0f0171e97376e20bc",
-            "gasPrice": 100000000000
+            "to": "0xe968ce738C2C675227515E577332F02dF420E913",
+            "data": "0xb6b4af050000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000001742ee36cb4b7c969d99b5e92a100010a6cbc53a1b6036b242a32a8fd8d7ab59487382de092384dd50002eb608277f22adf0bb204c2a0888d08658597d13c62d5cba9e3ac2a000000000000000000000000000000000000000000000000000000000000001b57a15823822cf4fa2c3ddccbf461073a960f222cd9052585ff132ab2552d17a6545a192e5ef7d696b878b1911a9e3be78d9ff12b716cde601699b591dbf46b4c0000000000000000000000002a2f5fb038fa3005b19a9421c6d230018e25acfd",
+            "gasPrice": 20
         }
     ]
 }
